@@ -1,0 +1,15 @@
+{
+  "org_id": "sdfdsfd",
+  "services": [
+    {
+      "name": "redis",
+      "host": "localhost",
+      "port": 6379,
+      "tags": [
+        {
+          "env": "local"
+        }
+      ]
+    }
+  ]
+}
