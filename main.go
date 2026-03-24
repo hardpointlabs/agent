@@ -18,6 +18,13 @@ import (
 )
 
 func clientMain(args Args) error {
+	keyPair, err := auth.LoadOrCreateKeyPair(args.KeyDir)
+	if err != nil {
+		log.Println("Unable to load/create key pair")
+		return err
+	}
+	log.Printf("Using key pair with fingerprint %s to identify this agent", keyPair.Fingerprint())
+
 	tlsConf := &tls.Config{
 		InsecureSkipVerify: args.SkipTls,
 		NextProtos:         []string{"quic-echo-example"},
@@ -37,12 +44,6 @@ func clientMain(args Args) error {
 		log.Println("Relay connection established")
 	}
 	defer conn.CloseWithError(0, "")
-
-	keyPair, err := auth.LoadOrCreateKeyPair(args.KeyDir)
-	if err != nil {
-		log.Println("Unable to load/create key pair")
-		return err
-	}
 
 	coordinator, err := control.CreateCoordinator(conn, keyPair)
 	if err != nil {
@@ -71,6 +72,9 @@ func main() {
 	p, err := arg.NewParser(arg.Config{
 		EnvPrefix: "HARDPOINT_",
 	}, &args)
+	if err != nil {
+		log.Fatalf("Failed to create argument parser: %v", err)
+	}
 	p.MustParse(os.Args[1:])
 
 	serviceConf, err := parseServiceConfig(args)

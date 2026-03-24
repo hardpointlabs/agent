@@ -28,7 +28,7 @@ type Args struct {
 	SkipTls       bool           `arg:"--skip-tls,env:SKIP_TLS" default:"false" help:"Bypass TLS certificate validation"`
 	Relay         string         `arg:"env" default:"relay.hardpoint.dev:443" help:"Relay endpoint"`
 	Config        string         `arg:"required,env" help:"Path to configuration file"`
-	KeyDir        string         `arg:"key-dir" default:"/var/lib/hardpoint"`
+	KeyDir        string         `default:"/var/lib/hardpoint"`
 	ServiceConfig *ServiceConfig `arg:"-"`
 }
 

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 // don't want to expose the private half outside the auth package to prevent
@@ -17,7 +18,9 @@ type KeyPair struct {
 }
 
 func LoadOrCreateKeyPair(path string) (*KeyPair, error) {
-	if b, err := os.ReadFile(path); err == nil {
+	keyFile := filepath.Join(path, "/key")
+	log.Printf("Looking for private key %s\n", keyFile)
+	if b, err := os.ReadFile(keyFile); err == nil {
 		priv := ed25519.PrivateKey(b)
 		pub := priv.Public().(ed25519.PublicKey)
 		return &KeyPair{private: priv, Public: pub}, nil
@@ -28,11 +31,11 @@ func LoadOrCreateKeyPair(path string) (*KeyPair, error) {
 		return nil, err
 	}
 
-	if err := os.WriteFile(path, priv, 0600); err != nil {
+	if err := os.WriteFile(keyFile, priv, 0600); err != nil {
 		return nil, err
 	}
 
-	log.Printf("No key pair found, created a new one in %s\n", path)
+	log.Printf("No key pair found, created a new one in %s\n", keyFile)
 
 	return &KeyPair{private: priv, Public: pub}, nil
 }
