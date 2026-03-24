@@ -50,5 +50,5 @@ func (k *KeyPair) Sign(input []byte) ([]byte, error) {
 
 func (k *KeyPair) Fingerprint() []byte {
 	h := sha256.Sum256(k.Public)
-	return []byte(hex.EncodeToString(h[:]))
+	return []byte(hex.EncodeToString(h[:]))[:16]
 }
