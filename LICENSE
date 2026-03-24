@@ -1,0 +1,77 @@
+Business Source License 1.1
+
+Licensor: Hardpoint Labs
+Licensed Work: Hardpoint Agent
+Change Date: 4 years from first public release
+Change License: Apache License, Version 2.0
+
+---
+
+## Terms
+
+### 1. Grant of Rights
+
+Subject to the terms of this License, Licensor hereby grants you a non-exclusive, worldwide, non-transferable, non-sublicensable license to:
+
+- view, copy, and modify the Licensed Work
+- use the Licensed Work for non-production and non-commercial purposes
+
+---
+
+### 2. Restrictions (Additional Use Grant Limitation)
+
+You may NOT, without a separate commercial agreement from Licensor:
+
+1. Use the Licensed Work in a production environment for commercial purposes
+
+2. Provide the Licensed Work as a hosted or managed service (including SaaS, API, or agent platform)
+
+3. Embed, integrate, or bundle the Licensed Work into a product or service that is sold, licensed, or commercially exploited
+
+4. Use the Licensed Work to develop, train, or improve any competing product or service
+
+5. Remove or obscure any licensing, copyright, or attribution notices
+
+---
+
+### 3. Permitted Use Cases
+
+The following are explicitly allowed:
+
+- Personal and educational use
+- Internal evaluation and testing
+- Non-commercial research and experimentation
+
+---
+
+### 4. Change Date
+
+On the Change Date specified above, this Licensed Work will automatically be made available under the Change License.
+
+---
+
+### 5. Commercial Licensing
+
+For any use not explicitly permitted under this License, including production or commercial use, you must obtain a commercial license from Licensor.
+
+Contact: legal@hardpoint.dev
+
+---
+
+### 6. Disclaimer
+
+THE LICENSED WORK IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED...
+
+---
+
+### 7. Definitions
+
+"Commercial Use" means any use that generates revenue, is part of a revenue-generating product or service, or supports business operations.
+
+"Production Use" means any use other than testing, evaluation, or development.
+
+"Competing Product or Service" means any software, platform, or service that provides substantially similar functionality to the Licensed Work.
+
+---
+
+© 2026 Hardpoint Labs. All rights reserved.
