@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/hardpointlabs/agent/auth"
@@ -64,16 +65,16 @@ func (c *Coordinator) Start() error {
 	fingerprint := c.keyPair.Fingerprint()
 	timestamp := timeNowBytes()
 
-	helloDigest := append(append([]byte("HELLO"), fingerprint...), timestamp...)
+	helloDigest := append(append(append(append([]byte("HELLO."), fingerprint...), '.'), timestamp...), '.')
 	sig, err := c.keyPair.Sign(helloDigest)
+	helloDigest = append(helloDigest, sig...)
 	if err != nil {
+		log.Println("Error signing")
 		return err
 	}
 
 	if err := c.controlStream.WriteFrame(helloDigest); err != nil {
-		return err
-	}
-	if err := c.controlStream.WriteFrame(sig); err != nil {
+		log.Println("Error writing hello")
 		return err
 	}
 
@@ -84,6 +85,8 @@ func (c *Coordinator) Start() error {
 	if string(resp) != "OK" {
 		return ErrHandshakeFailed
 	}
+
+	log.Println("DONE!!!")
 
 	return nil
 }

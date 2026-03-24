@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto"
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/sha256"
@@ -41,7 +42,7 @@ func LoadOrCreateKeyPair(path string) (*KeyPair, error) {
 }
 
 func (k *KeyPair) Sign(input []byte) ([]byte, error) {
-	sig, err := k.private.Sign(rand.Reader, input, nil)
+	sig, err := k.private.Sign(nil, input, &ed25519.Options{Hash: crypto.Hash(0)})
 	if err != nil {
 		return nil, err
 	}
@@ -50,5 +51,5 @@ func (k *KeyPair) Sign(input []byte) ([]byte, error) {
 
 func (k *KeyPair) Fingerprint() []byte {
 	h := sha256.Sum256(k.Public)
-	return []byte(hex.EncodeToString(h[:]))[:16]
+	return []byte(hex.EncodeToString(h[:]))[:32]
 }

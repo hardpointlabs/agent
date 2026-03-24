@@ -17,6 +17,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+const agentProtocol = "hp-1.0"
+
 func clientMain(args Args) error {
 	keyPair, err := auth.LoadOrCreateKeyPair(args.KeyDir)
 	if err != nil {
@@ -27,7 +29,7 @@ func clientMain(args Args) error {
 
 	tlsConf := &tls.Config{
 		InsecureSkipVerify: args.SkipTls,
-		NextProtos:         []string{"quic-echo-example"},
+		NextProtos:         []string{agentProtocol},
 	}
 	quicConfig := &quic.Config{
 		HandshakeIdleTimeout: 10 * time.Second,
@@ -43,15 +45,14 @@ func clientMain(args Args) error {
 	} else {
 		log.Println("Relay connection established")
 	}
-	defer conn.CloseWithError(0, "")
 
 	coordinator, err := control.CreateCoordinator(conn, keyPair)
 	if err != nil {
-		return nil
+		return err
 	}
 	defer coordinator.Close()
 
-	return nil
+	return coordinator.Start()
 }
 
 // copy bytes in one direction between 2 connections
