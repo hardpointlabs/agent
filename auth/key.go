@@ -5,6 +5,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"log"
 	"os"
@@ -46,7 +47,8 @@ func (k *KeyPair) Sign(input []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return sig, nil
+	encoded := base64.StdEncoding.EncodeToString(sig)
+	return []byte(encoded), nil
 }
 
 func (k *KeyPair) Fingerprint() []byte {

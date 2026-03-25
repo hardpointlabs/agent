@@ -11,6 +11,7 @@ import (
 
 	"github.com/alexflint/go-arg"
 	"github.com/hardpointlabs/agent/auth"
+	"github.com/hardpointlabs/agent/config"
 	"github.com/hardpointlabs/agent/control"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/qlog"
@@ -19,7 +20,7 @@ import (
 
 const agentProtocol = "hp-1.0"
 
-func clientMain(args Args) error {
+func clientMain(args config.Args) error {
 	keyPair, err := auth.LoadOrCreateKeyPair(args.KeyDir)
 	if err != nil {
 		log.Println("Unable to load/create key pair")
@@ -46,7 +47,7 @@ func clientMain(args Args) error {
 		log.Println("Relay connection established")
 	}
 
-	coordinator, err := control.CreateCoordinator(conn, keyPair)
+	coordinator, err := control.CreateCoordinator(conn, keyPair, args.AgentConfig)
 	if err != nil {
 		return err
 	}
@@ -69,7 +70,7 @@ func copy(group *errgroup.Group, dst io.Writer, src io.Reader) {
 
 func main() {
 	log.Println("Agent started")
-	var args Args
+	var args config.Args
 	p, err := arg.NewParser(arg.Config{
 		EnvPrefix: "HARDPOINT_",
 	}, &args)
@@ -78,12 +79,12 @@ func main() {
 	}
 	p.MustParse(os.Args[1:])
 
-	serviceConf, err := parseServiceConfig(args)
+	agentConf, err := config.ParseAgentConfig(args)
 	if err != nil {
 		p.Fail(fmt.Sprintf("Couldn't load config file: %v", err))
 	}
 
-	args.ServiceConfig = serviceConf
+	args.AgentConfig = agentConf
 
 	err = clientMain(args)
 	if err != nil {

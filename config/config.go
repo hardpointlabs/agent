@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -25,14 +25,14 @@ func (ac *AgentConfig) String() string {
 
 // CLI Arguments
 type Args struct {
-	SkipTls       bool           `arg:"--skip-tls,env:SKIP_TLS" default:"false" help:"Bypass TLS certificate validation"`
-	Relay         string         `arg:"env" default:"relay.hardpoint.dev:443" help:"Relay endpoint"`
-	Config        string         `arg:"required,env" help:"Path to configuration file"`
-	KeyDir        string         `default:"/var/lib/hardpoint"`
-	ServiceConfig *ServiceConfig `arg:"-"`
+	SkipTls     bool         `arg:"--skip-tls,env:SKIP_TLS" default:"false" help:"Bypass TLS certificate validation"`
+	Relay       string       `arg:"env" default:"relay.hardpoint.dev:443" help:"Relay endpoint"`
+	Config      string       `arg:"required,env" help:"Path to configuration file"`
+	KeyDir      string       `default:"/var/lib/hardpoint"`
+	AgentConfig *AgentConfig `arg:"-"`
 }
 
-func parseServiceConfig(args Args) (*ServiceConfig, error) {
+func ParseAgentConfig(args Args) (*AgentConfig, error) {
 	file, err := os.Open(args.Config)
 	if err != nil {
 		return nil, err
@@ -40,10 +40,10 @@ func parseServiceConfig(args Args) (*ServiceConfig, error) {
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
-	var serviceConfig *ServiceConfig
-	err = decoder.Decode(&serviceConfig)
+	var agentConfig *AgentConfig
+	err = decoder.Decode(&agentConfig)
 	if err != nil {
 		return nil, err
 	}
-	return serviceConfig, nil
+	return agentConfig, nil
 }
