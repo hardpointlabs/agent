@@ -60,6 +60,7 @@ func (c *controlStream) sendHello() error {
 		return err
 	}
 	if string(resp) == "OK" {
+		log.Println("Agent key already approved")
 		c.AuthState = StateOK
 		return nil
 	} else if string(resp) == "SENDPK" {
@@ -138,8 +139,10 @@ func (c *controlStream) doHandshake() error {
 			err = c.sendPubKey()
 		case StateWaitingApproval:
 			err = c.waitApproval()
+		case StateOK:
+			return nil
 		default:
-			log.Fatalf("State %d not implemented yet!", c.AuthState)
+			err = ErrHandshakeFailed
 		}
 		if err != nil {
 			return err
@@ -178,7 +181,7 @@ func CreateCoordinator(connection *quic.Conn, keyPair *auth.KeyPair, config *con
 
 func (c *Coordinator) Start() error {
 	err := c.controlStream.doHandshake()
-	if err != nil {
+	if err == nil {
 		log.Println("Handshake succeeded")
 	}
 

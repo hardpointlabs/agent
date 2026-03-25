@@ -43,8 +43,6 @@ func clientMain(args config.Args) error {
 	if err != nil {
 		log.Println("Unable to establish relay connection")
 		return err
-	} else {
-		log.Println("Relay connection established")
 	}
 
 	coordinator, err := control.CreateCoordinator(conn, keyPair, args.AgentConfig)
