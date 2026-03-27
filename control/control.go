@@ -3,8 +3,13 @@ package control
 import (
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"log"
+	"net"
+	"strings"
 	"time"
 
 	"github.com/hardpointlabs/agent/auth"
@@ -30,6 +35,7 @@ const (
 	StateHello AuthState = iota
 	StateWaitingPubKey
 	StateWaitingApproval
+	StateAdvertising
 	StateOK
 	StateError
 )
@@ -40,6 +46,7 @@ type controlStream struct {
 	AuthState  AuthState
 	QuicStream *quic.Stream
 	keyPair    *auth.KeyPair
+	Services   []config.ServiceConfig
 }
 
 func (c *controlStream) Close() error {
@@ -61,7 +68,7 @@ func (c *controlStream) sendHello() error {
 	}
 	if string(resp) == "OK" {
 		log.Println("Agent key already approved")
-		c.AuthState = StateOK
+		c.AuthState = StateAdvertising
 		return nil
 	} else if string(resp) == "SENDPK" {
 		log.Println("Relay is requesting public key")
@@ -119,7 +126,7 @@ func (c *controlStream) waitApproval() error {
 		if string(resp) == "WAIT" {
 			time.Sleep(time.Second * 10)
 		} else if string(resp) == "OK" {
-			c.AuthState = StateOK
+			c.AuthState = StateAdvertising
 			return nil
 		} else {
 			c.AuthState = StateError
@@ -127,6 +134,120 @@ func (c *controlStream) waitApproval() error {
 			return ErrHandshakeFailed
 		}
 	}
+}
+
+func (c *controlStream) sendServices() error {
+	servicesJSON, err := json.Marshal(c.Services)
+	if err != nil {
+		log.Println("Error marshaling services")
+		c.AuthState = StateError
+		return err
+	}
+
+	message := []byte("SERVICES.")
+	message = append(message, servicesJSON...)
+
+	log.Println("DOING SEND")
+	if err := c.WriteFrame(message); err != nil {
+		log.Println("Error writing SERVICES message")
+		c.AuthState = StateError
+		return err
+	}
+	log.Println("SENT")
+
+	log.Println("READING")
+	resp, err := c.ReadFrame()
+	if err != nil {
+		c.AuthState = StateError
+		return err
+	}
+	log.Println("READ DONE")
+
+	if string(resp) == "OK" {
+		log.Println("Services advertised successfully")
+		c.AuthState = StateOK
+		return nil
+	}
+
+	log.Printf("Unexpected response to SERVICES: '%s'", string(resp))
+	c.AuthState = StateError
+	return ErrHandshakeFailed
+}
+
+func (c *controlStream) findService(name string) *config.ServiceConfig {
+	for i := range c.Services {
+		if c.Services[i].Name == name {
+			return &c.Services[i]
+		}
+	}
+	return nil
+}
+
+func pipe(reader io.Reader, writer io.Writer, closer io.Closer, done chan<- struct{}) {
+	defer func() {
+		done <- struct{}{}
+	}()
+	io.Copy(writer, reader)
+	closer.Close()
+}
+
+func (c *controlStream) handleConnect(serviceName string, stream *quic.Stream) error {
+	service := c.findService(serviceName)
+	if service == nil {
+		log.Printf("Unknown service: %s", serviceName)
+		c.WriteFrame([]byte("ERROR.unknown_service"))
+		stream.Close()
+		return nil
+	}
+
+	addr := net.JoinHostPort(service.Host, fmt.Sprintf("%d", service.Port))
+	tcpConn, err := net.Dial("tcp", addr)
+	if err != nil {
+		log.Printf("Failed to connect to %s: %v", addr, err)
+		c.WriteFrame([]byte("ERROR.connection_failed"))
+		stream.Close()
+		return nil
+	}
+	defer tcpConn.Close()
+
+	c.WriteFrame([]byte("OK"))
+
+	frameCodec := lpstream.NewFrameCodec(stream)
+	quicReader := &quicStreamReader{FrameCodec: frameCodec}
+	quicWriter := &quicStreamWriter{FrameCodec: frameCodec}
+
+	done := make(chan struct{}, 2)
+	go pipe(quicReader, tcpConn, tcpConn, done)
+	go pipe(tcpConn, quicWriter, stream, done)
+
+	<-done
+	<-done
+	return nil
+}
+
+type quicStreamReader struct {
+	*lpstream.FrameCodec
+}
+
+func (r *quicStreamReader) Read(p []byte) (int, error) {
+	frame, err := r.ReadFrame()
+	if err != nil {
+		return 0, err
+	}
+	n := copy(p, frame)
+	return n, nil
+}
+
+type quicStreamWriter struct {
+	*lpstream.FrameCodec
+}
+
+func (w *quicStreamWriter) Write(p []byte) (int, error) {
+	err := w.WriteFrame(p)
+	if err != nil {
+		return 0, err
+	}
+	return len(p), nil
 }
 
 func (c *controlStream) doHandshake() error {
@@ -139,6 +260,8 @@ func (c *controlStream) doHandshake() error {
 			err = c.sendPubKey()
 		case StateWaitingApproval:
 			err = c.waitApproval()
+		case StateAdvertising:
+			err = c.sendServices()
 		case StateOK:
 			return nil
 		default:
@@ -175,17 +298,57 @@ func CreateCoordinator(connection *quic.Conn, keyPair *auth.KeyPair, config *con
 	if err != nil {
 		return nil, err
 	}
-	controlStream := &controlStream{QuicStream: stream, FrameCodec: lpstream.NewFrameCodec(stream), AuthState: StateHello, keyPair: keyPair, OrgId: config.OrgId}
+	controlStream := &controlStream{
+		QuicStream: stream,
+		FrameCodec: lpstream.NewFrameCodec(stream),
+		AuthState:  StateHello,
+		keyPair:    keyPair,
+		OrgId:      config.OrgId,
+		Services:   config.Services,
+	}
 	return &Coordinator{connection: connection, controlStream: controlStream}, nil
 }
 
 func (c *Coordinator) Start() error {
 	err := c.controlStream.doHandshake()
-	if err == nil {
-		log.Println("Handshake succeeded")
+	if err != nil {
+		return err
+	}
+	log.Println("Handshake succeeded")
+
+	log.Println("Entering stream accept loop")
+	return c.acceptLoop()
+}
+
+func (c *Coordinator) acceptLoop() error {
+	for {
+		stream, err := c.connection.AcceptStream(context.Background())
+		if err != nil {
+			log.Printf("Error accepting stream: %v", err)
+			return err
+		}
+		go c.handleStream(stream)
+	}
+}
+
+func (c *Coordinator) handleStream(stream *quic.Stream) {
+	frameCodec := lpstream.NewFrameCodec(stream)
+	msg, err := frameCodec.ReadFrame()
+	if err != nil {
+		log.Printf("Error reading from stream: %v", err)
+		stream.Close()
+		return
 	}
 
-	return err
+	msgStr := string(msg)
+	if !strings.HasPrefix(msgStr, "CONNECT.") {
+		log.Printf("Unexpected message: %s", msgStr)
+		stream.Close()
+		return
+	}
+
+	serviceName := strings.TrimPrefix(msgStr, "CONNECT.")
+	c.controlStream.handleConnect(serviceName, stream)
 }
 
 func (c *Coordinator) Close() error {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"time"
@@ -15,7 +14,6 @@ import (
 	"github.com/hardpointlabs/agent/control"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/qlog"
-	"golang.org/x/sync/errgroup"
 )
 
 const agentProtocol = "hp-1.0"
@@ -38,7 +36,7 @@ func clientMain(args config.Args) error {
 		Tracer:               qlog.DefaultConnectionTracer,
 	}
 
-	log.Println("Connecting to relay...")
+	log.Printf("Connecting to relay %s...\n", args.Relay)
 	conn, err := quic.DialAddr(context.Background(), args.Relay, tlsConf, quicConfig)
 	if err != nil {
 		log.Println("Unable to establish relay connection")
@@ -52,18 +50,6 @@ func clientMain(args config.Args) error {
 	defer coordinator.Close()
 
 	return coordinator.Start()
-}
-
-// copy bytes in one direction between 2 connections
-func copy(group *errgroup.Group, dst io.Writer, src io.Reader) {
-	group.Go(func() error {
-		for {
-			_, err := io.Copy(dst, src)
-			if err != nil {
-				log.Printf("Error copying: %v\n", err)
-			}
-		}
-	})
 }
 
 func main() {
