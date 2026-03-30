@@ -32,6 +32,10 @@ type Args struct {
 	AgentConfig *AgentConfig `arg:"-"`
 }
 
+func (Args) Version() string {
+	return fmt.Sprintf("agent %s (%.7s)", Version, Commit)
+}
+
 func ParseAgentConfig(args Args) (*AgentConfig, error) {
 	file, err := os.Open(args.Config)
 	if err != nil {

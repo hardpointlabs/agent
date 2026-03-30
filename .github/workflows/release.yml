@@ -1,0 +1,48 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.2.3)'
+        required: true
+        type: string
+
+env:
+  VERSION: ${{ github.event.inputs.version }}
+  COMMIT: ${{ github.sha }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Build
+        run: ./build.sh "$COMMIT" "$VERSION"
+
+      - name: Set outputs
+        id: vars
+        run: echo "short_sha=${COMMIT:0:7}" >> $GITHUB_OUTPUT
+
+      - name: Create artifact with version info
+        run: |
+          echo "VERSION=$VERSION" > version.env
+          echo "COMMIT=${{ steps.vars.outputs.short_sha }}" >> version.env
+          echo "IMAGE_TAG=$VERSION-${{ steps.vars.outputs.short_sha }}" >> version.env
+
+      - name: Upload version info
+        uses: actions/upload-artifact@v4
+        with:
+          name: version-info
+          path: version.env
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardpoint-agent-${{ github.event.inputs.version }}
+          path: agent
