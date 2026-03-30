@@ -3,10 +3,13 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"log"
 	"os"
 	"time"
+
+	_ "embed"
 
 	"github.com/alexflint/go-arg"
 	"github.com/hardpointlabs/agent/auth"
@@ -15,6 +18,17 @@ import (
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/qlog"
 )
+
+//go:embed ca.crt
+var caCert []byte
+
+func loadCACertPool() (*x509.CertPool, error) {
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(caCert) {
+		return nil, fmt.Errorf("failed to append CA cert")
+	}
+	return certPool, nil
+}
 
 const agentProtocol = "hp-1.0"
 
@@ -26,9 +40,15 @@ func clientMain(args config.Args) error {
 	}
 	log.Printf("Using key pair with fingerprint %s to identify this agent", keyPair.Fingerprint())
 
+	caCertPool, err := loadCACertPool()
+	if err != nil {
+		log.Println("Unable to load CA cert")
+		return err
+	}
+
 	tlsConf := &tls.Config{
-		InsecureSkipVerify: args.SkipTls,
-		NextProtos:         []string{agentProtocol},
+		RootCAs:    caCertPool,
+		NextProtos: []string{agentProtocol},
 	}
 	quicConfig := &quic.Config{
 		HandshakeIdleTimeout: 10 * time.Second,
