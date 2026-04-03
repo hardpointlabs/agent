@@ -47,8 +47,9 @@ func clientMain(args config.Args) error {
 	}
 
 	tlsConf := &tls.Config{
-		RootCAs:    caCertPool,
-		NextProtos: []string{agentProtocol},
+		RootCAs:            caCertPool,
+		NextProtos:         []string{agentProtocol},
+		InsecureSkipVerify: args.SkipTls,
 	}
 	quicConfig := &quic.Config{
 		HandshakeIdleTimeout: 10 * time.Second,
