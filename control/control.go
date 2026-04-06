@@ -185,69 +185,13 @@ func (c *controlStream) findService(name string) *config.ServiceConfig {
 
 func pipe(reader io.Reader, writer io.Writer, closer io.Closer, done chan<- struct{}) {
 	defer func() {
+		log.Printf("pipe done: reader=%T, writer=%T", reader, writer)
 		done <- struct{}{}
 	}()
-	io.Copy(writer, reader)
+	n, err := io.Copy(writer, reader)
+	log.Printf("io.Copy transferred %d bytes, err=%v", n, err)
 	closer.Close()
-}
-
-func (c *controlStream) handleConnect(serviceName string, stream *quic.Stream) error {
-	service := c.findService(serviceName)
-	if service == nil {
-		log.Printf("Unknown service: %s", serviceName)
-		c.WriteFrame([]byte("ERROR.unknown_service"))
-		stream.Close()
-		return nil
-	}
-
-	addr := net.JoinHostPort(service.Host, fmt.Sprintf("%d", service.Port))
-	tcpConn, err := net.Dial("tcp", addr)
-	if err != nil {
-		log.Printf("Failed to connect to %s: %v", addr, err)
-		c.WriteFrame([]byte("ERROR.connection_failed"))
-		stream.Close()
-		return nil
-	}
-	defer tcpConn.Close()
-
-	c.WriteFrame([]byte("OK"))
-
-	frameCodec := lpstream.NewFrameCodec(stream)
-	quicReader := &quicStreamReader{FrameCodec: frameCodec}
-	quicWriter := &quicStreamWriter{FrameCodec: frameCodec}
-
-	done := make(chan struct{}, 2)
-	go pipe(quicReader, tcpConn, tcpConn, done)
-	go pipe(tcpConn, quicWriter, stream, done)
-
-	<-done
-	<-done
-	return nil
-}
-
-type quicStreamReader struct {
-	*lpstream.FrameCodec
-}
-
-func (r *quicStreamReader) Read(p []byte) (int, error) {
-	frame, err := r.ReadFrame()
-	if err != nil {
-		return 0, err
-	}
-	n := copy(p, frame)
-	return n, nil
-}
-
-type quicStreamWriter struct {
-	*lpstream.FrameCodec
-}
-
-func (w *quicStreamWriter) Write(p []byte) (int, error) {
-	err := w.WriteFrame(p)
-	if err != nil {
-		return 0, err
-	}
-	return len(p), nil
+	log.Printf("closed closer: %T", closer)
 }
 
 func (c *controlStream) doHandshake() error {
@@ -332,13 +276,17 @@ func (c *Coordinator) acceptLoop() error {
 }
 
 func (c *Coordinator) handleStream(stream *quic.Stream) {
-	frameCodec := lpstream.NewFrameCodec(stream)
-	msg, err := frameCodec.ReadFrame()
+	log.Printf("New stream %d", stream.StreamID())
+	codec := lpstream.NewFrameCodec(stream)
+	log.Printf("Waiting for frame on stream %d", stream.StreamID())
+	msg, err := codec.ReadFrame()
 	if err != nil {
-		log.Printf("Error reading from stream: %v", err)
+		log.Printf("Error reading frame from stream %d: %v (type: %T)", stream.StreamID(), err, err)
 		stream.Close()
 		return
 	}
+
+	log.Printf("Received: %q", msg)
 
 	msgStr := string(msg)
 	if !strings.HasPrefix(msgStr, "CONNECT.") {
@@ -348,7 +296,42 @@ func (c *Coordinator) handleStream(stream *quic.Stream) {
 	}
 
 	serviceName := strings.TrimPrefix(msgStr, "CONNECT.")
-	c.controlStream.handleConnect(serviceName, stream)
+	log.Printf("Service requested: %s", serviceName)
+
+	service := c.controlStream.findService(serviceName)
+	if service == nil {
+		log.Printf("Unknown service: %s", serviceName)
+		codec.WriteFrame([]byte("ERROR.unknown_service"))
+		stream.Close()
+		return
+	}
+
+	log.Printf("Dialing %s:%d...", service.Host, service.Port)
+	addr := net.JoinHostPort(service.Host, fmt.Sprintf("%d", service.Port))
+	tcpConn, err := net.Dial("tcp", addr)
+	if err != nil {
+		log.Printf("Failed to connect to %s: %v", addr, err)
+		codec.WriteFrame([]byte("ERROR.connection_failed"))
+		stream.Close()
+		return
+	}
+
+	log.Println("Writing OK to stream")
+	err = codec.WriteFrame([]byte("OK"))
+	if err != nil {
+		log.Printf("Error writing OK: %v", err)
+		return
+	}
+	log.Println("OK written, starting pipes (raw byte mode)")
+
+	done := make(chan struct{}, 2)
+	go pipe(tcpConn, stream, stream, done)
+	go pipe(stream, tcpConn, tcpConn, done)
+
+	log.Println("Waiting for pipes to finish")
+	<-done
+	<-done
+	log.Println("Pipes finished, handleStream returning")
 }
 
 func (c *Coordinator) Close() error {
