@@ -14,7 +14,31 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86-64
+            goos: linux
+            goarch: amd64
+            artifact_name: hardpoint-agent-linux-x86-64
+          - os: ubuntu-latest
+            arch: arm64
+            goos: linux
+            goarch: arm64
+            artifact_name: hardpoint-agent-linux-arm64
+          - os: macos-latest
+            arch: arm64
+            goos: darwin
+            goarch: arm64
+            artifact_name: hardpoint-agent-macos-arm64
+          - os: macos-latest
+            arch: x86-64
+            goos: darwin
+            goarch: amd64
+            artifact_name: hardpoint-agent-macos-x86-64
     steps:
       - uses: actions/checkout@v4
 
@@ -23,7 +47,28 @@ jobs:
           go-version: '1.26'
 
       - name: Build
-        run: ./build.sh "$COMMIT" "$VERSION"
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          go build -ldflags="-X github.com/hardpointlabs/agent/config.Version=$VERSION -X github.com/hardpointlabs/agent/config.Commit=${COMMIT:0:7}" -o agent ./main.go
+
+      - name: Compute checksum
+        id: checksum
+        run: |
+          echo "${{ matrix.artifact_name }}-checksum=$(sha256sum agent | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}-${{ github.event.inputs.version }}
+          path: agent
+
+      - name: Upload checksum
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}-checksum-${{ github.event.inputs.version }}
+          path: agent
 
       - name: Set outputs
         id: vars
@@ -38,11 +83,30 @@ jobs:
       - name: Upload version info
         uses: actions/upload-artifact@v4
         with:
-          name: version-info
+          name: version-info-${{ matrix.artifact_name }}
           path: version.env
 
-      - name: Upload binary
+  checksum:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: hardpoint-agent-*
+          merge-multiple: false
+
+      - name: Compute checksums
+        run: |
+          cd artifacts
+          sha256sum */* > checksums.txt
+          cat checksums.txt
+
+      - name: Upload checksums
         uses: actions/upload-artifact@v4
         with:
-          name: hardpoint-agent-${{ github.event.inputs.version }}
-          path: agent
+          name: checksums-${{ github.event.inputs.version }}
+          path: artifacts/checksums.txt
