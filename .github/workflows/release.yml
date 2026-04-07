@@ -25,6 +25,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
+      - name: Fetch tags
+        run: git fetch --force --tags # Forces the CI to see the tag semantic-release just made
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
       - name: Run GoReleaser
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
