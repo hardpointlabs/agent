@@ -39,7 +39,6 @@ homebrew_casks:
       name: Chris Mowforth
       email: chris.mowforth@hardpoint.dev
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
-    directory: Formula
     description: "Hardpoint agent"
     hooks:
       post:
@@ -50,4 +49,4 @@ homebrew_casks:
       owner: hardpointlabs
       name: homebrew-agent
       branch: master
-      token: "{{ .Env.GH_TOKEN }}"
+      token: "{{ .Env.GITHUB_TOKEN }}"
