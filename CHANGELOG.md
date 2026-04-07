@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/hardpointlabs/agent/compare/v1.1.2...v1.1.3) (2026-04-07)
+
+
+### Bug Fixes
+
+* bump checkout and semantic-release actions ([5e50f82](https://github.com/hardpointlabs/agent/commit/5e50f82e639bbf355dc17fcfd1e46f3cf6c9c38b))
+
 ## [1.1.2](https://github.com/hardpointlabs/agent/compare/v1.1.1...v1.1.2) (2026-04-07)
 
 
