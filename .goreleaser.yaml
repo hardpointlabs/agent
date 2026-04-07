@@ -26,6 +26,20 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
 
+nfpms:
+  - id: default
+    package_name: hardpointd
+    vendor: Hardpoint
+    homepage: https://hardpoint.dev
+    maintainer: Support <support@hardpoint.dev>
+    description: Hardpoint agent
+    license: Apache 2.0
+    formats:
+      - deb
+    section: admin
+    priority: optional
+    bindir: /usr/bin
+
 changelog:
   sort: asc
   filters:
