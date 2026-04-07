@@ -11,6 +11,12 @@
         "assets": ["CHANGELOG.md"],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "successCmd": "echo 'new_release=true' >> $GITHUB_OUTPUT"
+      }
     ]
   ]
 }

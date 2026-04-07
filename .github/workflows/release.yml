@@ -8,7 +8,6 @@ on:
 jobs:
   main:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, 'feat:')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,6 +16,7 @@ jobs:
           fetch-depth: 0
 
       - name: Semantic Release
+        id: semantic
         uses: cycjimmy/semantic-release-action@v4
         with:
           extra_plugins: |
@@ -32,6 +32,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Run GoReleaser
+        if: steps.semantic.outputs.new_release == 'true'
         uses: goreleaser/goreleaser-action@v7
         with:
           args: release --clean
