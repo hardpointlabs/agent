@@ -53,60 +53,8 @@ jobs:
         run: |
           go build -ldflags="-X github.com/hardpointlabs/agent/config.Version=$VERSION -X github.com/hardpointlabs/agent/config.Commit=${COMMIT:0:7}" -o agent ./main.go
 
-      - name: Compute checksum
-        id: checksum
-        run: |
-          echo "${{ matrix.artifact_name }}-checksum=$(sha256sum agent | cut -d' ' -f1)" >> $GITHUB_OUTPUT
-
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}-${{ github.event.inputs.version }}
           path: agent
-
-      - name: Upload checksum
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact_name }}-checksum-${{ github.event.inputs.version }}
-          path: agent
-
-      - name: Set outputs
-        id: vars
-        run: echo "short_sha=${COMMIT:0:7}" >> $GITHUB_OUTPUT
-
-      - name: Create artifact with version info
-        run: |
-          echo "VERSION=$VERSION" > version.env
-          echo "COMMIT=${{ steps.vars.outputs.short_sha }}" >> version.env
-          echo "IMAGE_TAG=$VERSION-${{ steps.vars.outputs.short_sha }}" >> version.env
-
-      - name: Upload version info
-        uses: actions/upload-artifact@v4
-        with:
-          name: version-info-${{ matrix.artifact_name }}
-          path: version.env
-
-  checksum:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download all binaries
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          pattern: hardpoint-agent-*
-          merge-multiple: false
-
-      - name: Compute checksums
-        run: |
-          cd artifacts
-          sha256sum */* > checksums.txt
-          cat checksums.txt
-
-      - name: Upload checksums
-        uses: actions/upload-artifact@v4
-        with:
-          name: checksums-${{ github.event.inputs.version }}
-          path: artifacts/checksums.txt
