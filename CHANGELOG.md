@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/hardpointlabs/agent/compare/v1.1.0...v1.1.1) (2026-04-07)
+
+
+### Bug Fixes
+
+* update goreleaser config to >v2.26 ([72fd76b](https://github.com/hardpointlabs/agent/commit/72fd76b6b3967754af486da4b451f3fb694320cf))
+
 # [1.1.0](https://github.com/hardpointlabs/agent/compare/v1.0.0...v1.1.0) (2026-04-07)
 
 
