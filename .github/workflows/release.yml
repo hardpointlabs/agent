@@ -1,60 +1,31 @@
 name: release
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version tag (e.g., v1.2.3)'
-        required: true
-        type: string
-
-env:
-  VERSION: ${{ github.event.inputs.version }}
-  COMMIT: ${{ github.sha }}
+  push:
+    branches:
+      - master
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            arch: x86-64
-            goos: linux
-            goarch: amd64
-            artifact_name: hardpoint-agent-linux-x86-64
-          - os: ubuntu-latest
-            arch: arm64
-            goos: linux
-            goarch: arm64
-            artifact_name: hardpoint-agent-linux-arm64
-          - os: macos-latest
-            arch: arm64
-            goos: darwin
-            goarch: arm64
-            artifact_name: hardpoint-agent-macos-arm64
-          - os: macos-latest
-            arch: x86-64
-            goos: darwin
-            goarch: amd64
-            artifact_name: hardpoint-agent-macos-x86-64
+  main:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          go-version: '1.26'
+          fetch-depth: 0
 
-      - name: Build
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          extra_plugins: |
+            @semantic-release/git
+            @semantic-release/exec
+            @semantic-release/changelog
         env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-        run: |
-          go build -ldflags="-X github.com/hardpointlabs/agent/config.Version=$VERSION -X github.com/hardpointlabs/agent/config.Commit=${COMMIT:0:7}" -o agent ./main.go
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      - name: Upload binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact_name }}-${{ github.event.inputs.version }}
-          path: agent
+      - name: Run GoReleaser
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          curl -sL https://git.io/goreleaser | bash
