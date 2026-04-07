@@ -1,6 +1,6 @@
 version: 2
 
-project_name: hardpoint-agent
+project_name: hardpointd
 
 before:
   hooks:
@@ -18,16 +18,13 @@ builds:
       - -X github.com/hardpointlabs/agent/config.Commit={{ .Commit }}
 
 archives:
-  - format: tar.gz
+  - formats: ["tar.gz"]
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
-    format_overrides:
-      - goos: windows
-        format: zip
 
 changelog:
   sort: asc
@@ -36,20 +33,21 @@ changelog:
       - "^docs:"
       - "^test:"
 
-brews:
-  - name: hardpoint-agent
+homebrew_casks:
+  - name: hardpointd
     commit_author:
       name: Chris Mowforth
       email: chris.mowforth@hardpoint.dev
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
     directory: Formula
     description: "Hardpoint agent"
-    install: |
-      bin.install "hardpoint-agent"
-    test: |
-      system "#{bin}/hardpoint-agent --version"
+    hooks:
+      post:
+        install: |
+          bin.install "hardpointd"
+          system "#{bin}/hardpointd --version"
     repository:
       owner: hardpointlabs
       name: homebrew-agent
       branch: master
-      token: "{{ .Env.GITHUB_TOKEN }}"
+      token: "{{ .Env.GH_TOKEN }}"
