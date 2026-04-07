@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/hardpointlabs/agent/compare/v1.1.3...v1.1.4) (2026-04-07)
+
+
+### Bug Fixes
+
+* boilerplate debian support ([ac608ff](https://github.com/hardpointlabs/agent/commit/ac608ff7b327c9cfd3bac2d74d49e5c19f68d7d6))
+
 ## [1.1.3](https://github.com/hardpointlabs/agent/compare/v1.1.2...v1.1.3) (2026-04-07)
 
 
