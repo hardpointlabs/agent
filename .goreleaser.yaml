@@ -46,7 +46,7 @@ kos:
     repositories:
       - ghcr.io/hardpointlabs/agent
     bare: true
-    labels:
+    annotations:
       org.opencontainers.image.source: "https://github.com/hardpointlabs/agent"
       org.opencontainers.image.licenses: "BUSL-1.1"
       org.opencontainers.image.description: "Hardpoint agent"
