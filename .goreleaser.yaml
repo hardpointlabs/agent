@@ -45,6 +45,7 @@ kos:
   - id: default
     repositories:
       - ghcr.io/hardpointlabs/agent
+    bare: true
     tags:
       - "{{.Tag}}"
       - latest
