@@ -1,3 +1,10 @@
+## [1.1.8](https://github.com/hardpointlabs/agent/compare/v1.1.7...v1.1.8) (2026-04-08)
+
+
+### Bug Fixes
+
+* add OCI source label ([c065bc1](https://github.com/hardpointlabs/agent/commit/c065bc1558c7437ac53435479d9b6922129ef80f))
+
 ## [1.1.7](https://github.com/hardpointlabs/agent/compare/v1.1.6...v1.1.7) (2026-04-08)
 
 
