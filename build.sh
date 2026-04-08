@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 COMMIT=${1:-$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")}
 VERSION=${2:-dev}
