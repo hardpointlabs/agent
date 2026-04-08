@@ -1,3 +1,10 @@
+## [1.1.10](https://github.com/hardpointlabs/agent/compare/v1.1.9...v1.1.10) (2026-04-08)
+
+
+### Bug Fixes
+
+* avoid logging agent start before arg parsing ([a906cd8](https://github.com/hardpointlabs/agent/commit/a906cd811628bcc20598ae2ae473f2cbf3809ddb))
+
 ## [1.1.9](https://github.com/hardpointlabs/agent/compare/v1.1.8...v1.1.9) (2026-04-08)
 
 
