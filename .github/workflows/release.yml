@@ -48,4 +48,5 @@ jobs:
         with:
           args: release --clean
         env:
+          KO_DOCKER_REPO: ghcr.io/hardpointlabs/agent
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
