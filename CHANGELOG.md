@@ -1,3 +1,10 @@
+## [1.1.7](https://github.com/hardpointlabs/agent/compare/v1.1.6...v1.1.7) (2026-04-08)
+
+
+### Bug Fixes
+
+* set bare:true when publishing images ([766ce9b](https://github.com/hardpointlabs/agent/commit/766ce9b0e67fc16e71d4e68f1286cd835b6598b3))
+
 ## [1.1.6](https://github.com/hardpointlabs/agent/compare/v1.1.5...v1.1.6) (2026-04-08)
 
 
