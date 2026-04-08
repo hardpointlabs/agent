@@ -1,3 +1,10 @@
+## [1.1.6](https://github.com/hardpointlabs/agent/compare/v1.1.5...v1.1.6) (2026-04-08)
+
+
+### Bug Fixes
+
+* install syft before generating sbom ([859e6b1](https://github.com/hardpointlabs/agent/commit/859e6b169c641e43036971e1decbf34254bbba65))
+
 ## [1.1.5](https://github.com/hardpointlabs/agent/compare/v1.1.4...v1.1.5) (2026-04-08)
 
 
