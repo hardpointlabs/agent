@@ -1,3 +1,10 @@
+## [1.1.9](https://github.com/hardpointlabs/agent/compare/v1.1.8...v1.1.9) (2026-04-08)
+
+
+### Bug Fixes
+
+* annotations, not labels ([d3b011c](https://github.com/hardpointlabs/agent/commit/d3b011c93e597d32a52831125296057c0552ea8a))
+
 ## [1.1.8](https://github.com/hardpointlabs/agent/compare/v1.1.7...v1.1.8) (2026-04-08)
 
 
