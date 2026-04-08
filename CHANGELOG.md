@@ -1,3 +1,10 @@
+## [1.1.5](https://github.com/hardpointlabs/agent/compare/v1.1.4...v1.1.5) (2026-04-08)
+
+
+### Bug Fixes
+
+* build docker images thru ko, release on GHCR ([095782c](https://github.com/hardpointlabs/agent/commit/095782ca305bc299b4e5516c6709f5d26a5cfa45))
+
 ## [1.1.4](https://github.com/hardpointlabs/agent/compare/v1.1.3...v1.1.4) (2026-04-07)
 
 
