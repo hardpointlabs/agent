@@ -7,7 +7,8 @@ before:
     - go mod tidy
 
 builds:
-  - goos:
+  - id: default
+    goos:
       - linux
       - darwin
     goarch:
@@ -39,6 +40,25 @@ nfpms:
     section: admin
     priority: optional
     bindir: /usr/bin
+
+kos:
+  - id: default
+    repositories:
+      - ghcr.io/hardpointlabs/agent
+    tags:
+      - "{{.Tag}}"
+      - latest
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    sbom: spdx
+    sbom_directory: "out/sbom"
+
+sboms:
+  - id: default
+    cmd: syft
+    args: ["$artifact", "--output", "spdx-json=$document"]
+    artifacts: archive
 
 changelog:
   sort: asc
