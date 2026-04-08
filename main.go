@@ -33,6 +33,7 @@ func loadCACertPool() (*x509.CertPool, error) {
 const agentProtocol = "hp-1.0"
 
 func clientMain(args config.Args) error {
+	log.Println("Agent started")
 	keyPair, err := auth.LoadOrCreateKeyPair(args.KeyDir)
 	if err != nil {
 		log.Println("Unable to load/create key pair")
@@ -74,7 +75,6 @@ func clientMain(args config.Args) error {
 }
 
 func main() {
-	log.Println("Agent started")
 	var args config.Args
 	p, err := arg.NewParser(arg.Config{
 		EnvPrefix: "HARDPOINT_",
