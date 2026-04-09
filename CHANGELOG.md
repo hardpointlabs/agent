@@ -1,3 +1,10 @@
+## [1.1.11](https://github.com/hardpointlabs/agent/compare/v1.1.10...v1.1.11) (2026-04-09)
+
+
+### Bug Fixes
+
+* publish .debs to R2 ([7a1e5aa](https://github.com/hardpointlabs/agent/commit/7a1e5aa4334cd80ebfaf7fd30874f49a250f0445))
+
 ## [1.1.10](https://github.com/hardpointlabs/agent/compare/v1.1.9...v1.1.10) (2026-04-08)
 
 
