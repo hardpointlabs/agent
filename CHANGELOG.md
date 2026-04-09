@@ -1,3 +1,10 @@
+## [1.1.15](https://github.com/hardpointlabs/agent/compare/v1.1.14...v1.1.15) (2026-04-09)
+
+
+### Bug Fixes
+
+* nFPM signer syntax ([2bcc52d](https://github.com/hardpointlabs/agent/commit/2bcc52d84a57403c8c0a21d09fa5aaaccf6d7918))
+
 ## [1.1.14](https://github.com/hardpointlabs/agent/compare/v1.1.13...v1.1.14) (2026-04-09)
 
 
