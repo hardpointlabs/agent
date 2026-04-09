@@ -1,3 +1,10 @@
+## [1.1.17](https://github.com/hardpointlabs/agent/compare/v1.1.16...v1.1.17) (2026-04-09)
+
+
+### Bug Fixes
+
+* pinentry mode on import ([0f1afee](https://github.com/hardpointlabs/agent/commit/0f1afee2ef4561494cc159d53c3f4a2b9efde939))
+
 ## [1.1.16](https://github.com/hardpointlabs/agent/compare/v1.1.15...v1.1.16) (2026-04-09)
 
 
