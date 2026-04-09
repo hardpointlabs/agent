@@ -1,3 +1,10 @@
+## [1.1.19](https://github.com/hardpointlabs/agent/compare/v1.1.18...v1.1.19) (2026-04-09)
+
+
+### Bug Fixes
+
+* missing GPG_PASSPHRASE for goreleaser ([6ffed3b](https://github.com/hardpointlabs/agent/commit/6ffed3b26c674175e5dbe9bb053cc451f2618a9a))
+
 ## [1.1.18](https://github.com/hardpointlabs/agent/compare/v1.1.17...v1.1.18) (2026-04-09)
 
 
