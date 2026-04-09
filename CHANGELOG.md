@@ -1,3 +1,10 @@
+## [1.1.18](https://github.com/hardpointlabs/agent/compare/v1.1.17...v1.1.18) (2026-04-09)
+
+
+### Bug Fixes
+
+* remove sudo, use native aptly config for R2, remove GPG_KEY_PATH ([316695f](https://github.com/hardpointlabs/agent/commit/316695f4dcc8ce3c65a3a712f7f2955d2b93bcdb))
+
 ## [1.1.17](https://github.com/hardpointlabs/agent/compare/v1.1.16...v1.1.17) (2026-04-09)
 
 
