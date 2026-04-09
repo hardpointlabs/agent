@@ -1,3 +1,10 @@
+## [1.1.14](https://github.com/hardpointlabs/agent/compare/v1.1.13...v1.1.14) (2026-04-09)
+
+
+### Bug Fixes
+
+* no base64 ([ee944e8](https://github.com/hardpointlabs/agent/commit/ee944e856522bc3e312fb6b2cc01ed8380c98296))
+
 ## [1.1.13](https://github.com/hardpointlabs/agent/compare/v1.1.12...v1.1.13) (2026-04-09)
 
 
