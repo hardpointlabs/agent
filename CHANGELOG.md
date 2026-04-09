@@ -1,3 +1,10 @@
+## [1.1.12](https://github.com/hardpointlabs/agent/compare/v1.1.11...v1.1.12) (2026-04-09)
+
+
+### Bug Fixes
+
+* install aptly through apt ([9da9a90](https://github.com/hardpointlabs/agent/commit/9da9a900f5421e8f04a346bfd7b7f9306e29e8bc))
+
 ## [1.1.11](https://github.com/hardpointlabs/agent/compare/v1.1.10...v1.1.11) (2026-04-09)
 
 
