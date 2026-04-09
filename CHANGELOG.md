@@ -1,3 +1,10 @@
+## [1.1.16](https://github.com/hardpointlabs/agent/compare/v1.1.15...v1.1.16) (2026-04-09)
+
+
+### Bug Fixes
+
+* feed passphrase in from tempfile ([839ccea](https://github.com/hardpointlabs/agent/commit/839ccea2e1a302bf9a51d8de7f60d1319ab359bb))
+
 ## [1.1.15](https://github.com/hardpointlabs/agent/compare/v1.1.14...v1.1.15) (2026-04-09)
 
 
