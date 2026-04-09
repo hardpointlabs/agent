@@ -57,6 +57,7 @@ jobs:
           KO_DOCKER_REPO: ghcr.io/hardpointlabs/agent
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       - name: Upload .deb artifacts
         if: steps.semantic.outputs.new_release == 'true'
         id: upload
