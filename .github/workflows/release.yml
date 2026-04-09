@@ -46,8 +46,7 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
       - name: Import GPG key
         run: |
-          echo "${{ secrets.GPG_PASSPHRASE }}" > /tmp/passphrase.txt
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --yes --batch --import --passphrase-file /tmp/passphrase.txt
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --import
           gpg --export-secret-keys > /tmp/gpg.key
       - name: Run GoReleaser
         if: steps.semantic.outputs.new_release == 'true'
@@ -84,8 +83,7 @@ jobs:
           path: .
       - name: Import GPG key
         run: |
-          echo "${{ secrets.GPG_PASSPHRASE }}" > /tmp/passphrase.txt
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --yes --batch --import --passphrase-file /tmp/passphrase.txt
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --import
       - name: Install aptly
         run: |
           apt update && apt -y install aptly
