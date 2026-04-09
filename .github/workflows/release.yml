@@ -32,7 +32,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Fetch tags
-        run: git fetch --force --tags # Forces the CI to see the tag semantic-release just made
+        run: git fetch --force --tags
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Login to GHCR
@@ -47,7 +47,7 @@ jobs:
       - name: Import GPG key
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --import
-          gpg --export-secret-keys > /tmp/gpg.key
+          gpg --list-secret-keys --keyid-format=long
       - name: Run GoReleaser
         if: steps.semantic.outputs.new_release == 'true'
         uses: goreleaser/goreleaser-action@v7
@@ -56,13 +56,12 @@ jobs:
         env:
           KO_DOCKER_REPO: ghcr.io/hardpointlabs/agent
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          GPG_KEY_PATH: /tmp/gpg.key
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
       - name: Upload .deb artifacts
         if: steps.semantic.outputs.new_release == 'true'
         id: upload
         run: |
-          DEB_FILES=$(find dist/*.deb | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          DEB_FILES=$(find dist -name "*.deb" | jq -R -s -c 'split("\n") | map(select(length > 0))')
           echo "deb_files=${DEB_FILES}" >> $GITHUB_OUTPUT
       - name: Upload .deb artifacts
         if: steps.semantic.outputs.new_release == 'true'
@@ -80,32 +79,49 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: deb-packages
-          path: .
+          path: ./debs
       - name: Import GPG key
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --import
+          gpg --list-secret-keys --keyid-format=long
       - name: Install aptly
         run: |
-          apt update && apt -y install aptly
-      - name: Configure R2 credentials
+          sudo apt update && sudo apt install -y aptly
+      - name: Configure aptly
         run: |
-          mkdir -p ~/.aws
-          cat <<EOF > ~/.aws/credentials
-          [default]
-          aws_access_key_id = ${{ secrets.R2_ACCESS_KEY_ID }}
-          aws_secret_access_key = ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          EOF
-          cat <<EOF > ~/.aws/config
-          [default]
-          region = auto
-          endpoint_url = https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          mkdir -p ~/.aptly
+          cat <<EOF > ~/.aptly.conf
+          {
+            "S3PublishEndpoints": {
+              "r2": {
+                "region": "auto",
+                "bucket": "${{ secrets.R2_BUCKET }}",
+                "endpoint": "https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com",
+                "awsAccessKeyID": "${{ secrets.R2_ACCESS_KEY_ID }}",
+                "awsSecretAccessKey": "${{ secrets.R2_SECRET_ACCESS_KEY }}",
+                "prefix": "apt",
+                "acl": "public-read",
+                "storageClass": ""
+              }
+            }
+          }
           EOF
       - name: Create APT repository with aptly
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
+          # Create repo and add packages
           aptly repo create -distribution=stable -component=main hardpoint
-          aptly repo add hardpoint ./*.deb
-          aptly snapshot create hardpoint-${GITHUB_REF_NAME} from repo hardpoint
-          aptly publish snapshot hardpoint-${GITHUB_REF_NAME} -architectures=amd64,arm64 -gpg-key=${{ secrets.GPG_KEY_ID }}
-      - name: Sync to R2
-        run: |
-          aws s3 sync --delete public/ s3://${{ secrets.R2_BUCKET }}/apt/
+          aptly repo add hardpoint ./debs/*.deb
+          
+          # Create snapshot
+          aptly snapshot create hardpoint-${GITHUB_SHA::8} from repo hardpoint
+          
+          # Publish to R2
+          aptly publish snapshot \
+            -batch \
+            -passphrase="${GPG_PASSPHRASE}" \
+            -architectures=amd64,arm64 \
+            -gpg-key="${{ secrets.GPG_KEY_ID }}" \
+            hardpoint-${GITHUB_SHA::8} \
+            s3:r2:

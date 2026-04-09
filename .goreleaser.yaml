@@ -40,9 +40,26 @@ nfpms:
     section: admin
     priority: optional
     bindir: /usr/bin
-    deb:
-      signature:
-        key_file: "{{ .Env.GPG_KEY_PATH }}"
+
+# Sign all package artifacts (deb files)
+signs:
+  - cmd: gpg
+    args:
+      - "--batch"
+      - "--pinentry-mode"
+      - "loopback"
+      - "--passphrase"
+      - "{{ .Env.GPG_PASSPHRASE }}"
+      - "--local-user"
+      - "{{ .Env.GPG_KEY_ID }}"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
+    signature: "${artifact}.sig"
+    artifacts: package
+    ids:
+      - default
 
 kos:
   - id: default
