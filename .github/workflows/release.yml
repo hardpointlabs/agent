@@ -13,6 +13,8 @@ on:
 jobs:
   main:
     runs-on: ubuntu-latest
+    outputs:
+      deb_files: ${{ steps.upload.outputs.deb_files }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -50,3 +52,53 @@ jobs:
         env:
           KO_DOCKER_REPO: ghcr.io/hardpointlabs/agent
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: Upload .deb artifacts
+        if: steps.semantic.outputs.new_release == 'true'
+        id: upload
+        run: |
+          DEB_FILES=$(find dist/*.deb | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "deb_files=${DEB_FILES}" >> $GITHUB_OUTPUT
+      - name: Upload .deb artifacts
+        if: steps.semantic.outputs.new_release == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-packages
+          path: dist/*.deb
+
+  publish-deb:
+    needs: main
+    runs-on: ubuntu-latest
+    if: needs.main.outputs.deb_files != '[]'
+    steps:
+      - name: Download .deb artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: deb-packages
+          path: .
+      - name: Install aptly
+        run: |
+          curl -sSfL https://github.com/smira/aptly/releases/download/v1.5.0/aptly_1.5.0_linux_amd64.tar.gz | tar -xzC /usr/local/bin
+          curl -sSfL https://github.com/smira/aptly/releases/download/v1.5.0/aptly_1.5.0_linux_arm64.tar.gz | tar -xzC /usr/local/bin
+          chmod +x /usr/local/bin/aptly
+      - name: Configure R2 credentials
+        run: |
+          mkdir -p ~/.aws
+          cat <<EOF > ~/.aws/credentials
+          [default]
+          aws_access_key_id = ${{ secrets.R2_ACCESS_KEY_ID }}
+          aws_secret_access_key = ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          EOF
+          cat <<EOF > ~/.aws/config
+          [default]
+          region = auto
+          endpoint_url = https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          EOF
+      - name: Create APT repository with aptly
+        run: |
+          aptly repo create -distribution=stable -component=main hardpoint
+          aptly repo add hardpoint ./*.deb
+          aptly snapshot create hardpoint-${GITHUB_REF_NAME} from repo hardpoint
+          aptly publish snapshot hardpoint-${GITHUB_REF_NAME} -architectures=amd64,arm64
+      - name: Sync to R2
+        run: |
+          aws s3 sync --delete public/ s3://${{ secrets.R2_BUCKET }}/apt/
