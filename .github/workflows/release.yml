@@ -44,6 +44,9 @@ jobs:
       - name: Install Syft
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 -d | gpg --batch --import
       - name: Run GoReleaser
         if: steps.semantic.outputs.new_release == 'true'
         uses: goreleaser/goreleaser-action@v7
@@ -52,6 +55,9 @@ jobs:
         env:
           KO_DOCKER_REPO: ghcr.io/hardpointlabs/agent
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          GPG_KEYRING: ~/.gnupg/pubring.kbx
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       - name: Upload .deb artifacts
         if: steps.semantic.outputs.new_release == 'true'
         id: upload
@@ -75,6 +81,9 @@ jobs:
         with:
           name: deb-packages
           path: .
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 -d | gpg --batch --import
       - name: Install aptly
         run: |
           apt update && apt -y install aptly
@@ -96,7 +105,7 @@ jobs:
           aptly repo create -distribution=stable -component=main hardpoint
           aptly repo add hardpoint ./*.deb
           aptly snapshot create hardpoint-${GITHUB_REF_NAME} from repo hardpoint
-          aptly publish snapshot hardpoint-${GITHUB_REF_NAME} -architectures=amd64,arm64
+          aptly publish snapshot hardpoint-${GITHUB_REF_NAME} -architectures=amd64,arm64 -gpg-key=${{ secrets.GPG_KEY_ID }}
       - name: Sync to R2
         run: |
           aws s3 sync --delete public/ s3://${{ secrets.R2_BUCKET }}/apt/

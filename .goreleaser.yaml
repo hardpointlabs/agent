@@ -40,6 +40,9 @@ nfpms:
     section: admin
     priority: optional
     bindir: /usr/bin
+    gpg: "{{ .Env.GPG_KEY_ID }}"
+    gpg_keyring: "{{ .Env.GPG_KEYRING }}"
+    gpg_passphrase: "{{ .Env.GPG_PASSPHRASE }}"
 
 kos:
   - id: default
