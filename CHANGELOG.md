@@ -1,3 +1,10 @@
+## [1.1.13](https://github.com/hardpointlabs/agent/compare/v1.1.12...v1.1.13) (2026-04-09)
+
+
+### Bug Fixes
+
+* pgp signing ([f80f11e](https://github.com/hardpointlabs/agent/commit/f80f11e4b35ddfac35869f6926a7ff215afda9f5))
+
 ## [1.1.12](https://github.com/hardpointlabs/agent/compare/v1.1.11...v1.1.12) (2026-04-09)
 
 
