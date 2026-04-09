@@ -6,17 +6,8 @@ import (
 	"os"
 )
 
-// Service config file
-type ServiceConfig struct {
-	Name string            `json:"name"`
-	Host string            `json:"host"`
-	Port int16             `json:"port"`
-	Tags map[string]string `json:"tags"`
-}
-
 type AgentConfig struct {
-	OrgId    string          `json:"org_id"`
-	Services []ServiceConfig `json:"services"`
+	OrgId string `json:"org_id"`
 }
 
 func (ac *AgentConfig) String() string {
@@ -27,17 +18,21 @@ func (ac *AgentConfig) String() string {
 type Args struct {
 	SkipTls     bool         `arg:"--skip-tls,env:SKIP_TLS" default:"false" help:"Bypass TLS certificate validation"`
 	Relay       string       `arg:"env" default:"relay.hardpoint.dev:443" help:"Relay endpoint"`
-	Config      string       `arg:"required,env" help:"Path to configuration file"`
 	KeyDir      string       `default:"/var/lib/hardpoint"`
 	AgentConfig *AgentConfig `arg:"-"`
+	ListenCmd   *ListenCmd   `arg:"subcommand:listen" help:"Start the agent and listen for connections"`
+}
+
+type ListenCmd struct {
+	Config string `arg:"required,--config,env" help:"Path to configuration file"`
 }
 
 func (Args) Version() string {
 	return fmt.Sprintf("agent %s (%.7s)", Version, Commit)
 }
 
-func ParseAgentConfig(args Args) (*AgentConfig, error) {
-	file, err := os.Open(args.Config)
+func ParseAgentConfig(configPath string) (*AgentConfig, error) {
+	file, err := os.Open(configPath)
 	if err != nil {
 		return nil, err
 	}

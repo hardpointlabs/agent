@@ -3,9 +3,7 @@ package control
 import (
 	"context"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net"
@@ -35,7 +33,6 @@ const (
 	StateHello AuthState = iota
 	StateWaitingPubKey
 	StateWaitingApproval
-	StateAdvertising
 	StateOK
 	StateError
 )
@@ -46,7 +43,6 @@ type controlStream struct {
 	AuthState  AuthState
 	QuicStream *quic.Stream
 	keyPair    *auth.KeyPair
-	Services   []config.ServiceConfig
 }
 
 func (c *controlStream) Close() error {
@@ -68,7 +64,7 @@ func (c *controlStream) sendHello() error {
 	}
 	if string(resp) == "OK" {
 		log.Println("Agent key already approved")
-		c.AuthState = StateAdvertising
+		c.AuthState = StateOK
 		return nil
 	} else if string(resp) == "SENDPK" {
 		log.Println("Relay is requesting public key")
@@ -126,7 +122,7 @@ func (c *controlStream) waitApproval() error {
 		if string(resp) == "WAIT" {
 			time.Sleep(time.Second * 10)
 		} else if string(resp) == "OK" {
-			c.AuthState = StateAdvertising
+			c.AuthState = StateOK
 			return nil
 		} else {
 			c.AuthState = StateError
@@ -136,51 +132,8 @@ func (c *controlStream) waitApproval() error {
 	}
 }
 
-func (c *controlStream) sendServices() error {
-	servicesJSON, err := json.Marshal(c.Services)
-	if err != nil {
-		log.Println("Error marshaling services")
-		c.AuthState = StateError
-		return err
-	}
-
-	message := []byte("SERVICES.")
-	message = append(message, servicesJSON...)
-
-	log.Println("DOING SEND")
-	if err := c.WriteFrame(message); err != nil {
-		log.Println("Error writing SERVICES message")
-		c.AuthState = StateError
-		return err
-	}
-	log.Println("SENT")
-
-	log.Println("READING")
-	resp, err := c.ReadFrame()
-	if err != nil {
-		c.AuthState = StateError
-		return err
-	}
-	log.Println("READ DONE")
-
-	if string(resp) == "OK" {
-		log.Println("Services advertised successfully")
-		c.AuthState = StateOK
-		return nil
-	}
-
-	log.Printf("Unexpected response to SERVICES: '%s'", string(resp))
-	c.AuthState = StateError
-	return ErrHandshakeFailed
-}
-
-func (c *controlStream) findService(name string) *config.ServiceConfig {
-	for i := range c.Services {
-		if c.Services[i].Name == name {
-			return &c.Services[i]
-		}
-	}
-	return nil
+func (c *controlStream) findService(name string) *string {
+	return &name
 }
 
 func pipe(reader io.Reader, writer io.Writer, closer io.Closer, done chan<- struct{}) {
@@ -204,8 +157,6 @@ func (c *controlStream) doHandshake() error {
 			err = c.sendPubKey()
 		case StateWaitingApproval:
 			err = c.waitApproval()
-		case StateAdvertising:
-			err = c.sendServices()
 		case StateOK:
 			return nil
 		default:
@@ -248,7 +199,6 @@ func CreateCoordinator(connection *quic.Conn, keyPair *auth.KeyPair, config *con
 		AuthState:  StateHello,
 		keyPair:    keyPair,
 		OrgId:      config.OrgId,
-		Services:   config.Services,
 	}
 	return &Coordinator{connection: connection, controlStream: controlStream}, nil
 }
@@ -306,11 +256,10 @@ func (c *Coordinator) handleStream(stream *quic.Stream) {
 		return
 	}
 
-	log.Printf("Dialing %s:%d...", service.Host, service.Port)
-	addr := net.JoinHostPort(service.Host, fmt.Sprintf("%d", service.Port))
-	tcpConn, err := net.Dial("tcp", addr)
+	log.Printf("Dialing %s...", *service)
+	tcpConn, err := net.Dial("tcp", *service)
 	if err != nil {
-		log.Printf("Failed to connect to %s: %v", addr, err)
+		log.Printf("Failed to connect to %s", *service)
 		codec.WriteFrame([]byte("ERROR.connection_failed"))
 		stream.Close()
 		return

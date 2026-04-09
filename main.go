@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -22,12 +21,11 @@ func clientMain(args config.Args) error {
 	}
 	log.Printf("Using key pair with fingerprint %s to identify this agent", keyPair.Fingerprint())
 
+	conn, err := control.DialRelay(args.Relay, args.SkipTls)
 	if err != nil {
 		log.Println("Unable to establish relay connection")
 		return err
 	}
-
-	conn, err := control.DialRelay(args.Relay, args.SkipTls)
 	coordinator, err := control.CreateCoordinator(conn, keyPair, args.AgentConfig)
 	if err != nil {
 		return err
@@ -41,21 +39,24 @@ func main() {
 	var args config.Args
 	p, err := arg.NewParser(arg.Config{
 		EnvPrefix: "HARDPOINT_",
+		IgnoreEnv: true,
 	}, &args)
 	if err != nil {
 		log.Fatalf("Failed to create argument parser: %v", err)
 	}
 	p.MustParse(os.Args[1:])
 
-	agentConf, err := config.ParseAgentConfig(args)
-	if err != nil {
-		p.Fail(fmt.Sprintf("Couldn't load config file: %v", err))
-	}
-
-	args.AgentConfig = agentConf
-
-	err = clientMain(args)
-	if err != nil {
-		log.Panicf("Something went wrong: %v\n", err)
+	switch {
+	case args.ListenCmd != nil:
+		agentConf, err := config.ParseAgentConfig(args.ListenCmd.Config)
+		if err != nil {
+			log.Fatalf("Couldn't load config file: %v", err)
+		}
+		args.AgentConfig = agentConf
+		if err := clientMain(args); err != nil {
+			log.Panicf("Something went wrong: %v\n", err)
+		}
+	default:
+		p.WriteHelp(os.Stdout)
 	}
 }
