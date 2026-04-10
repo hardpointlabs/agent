@@ -1,4 +1,5 @@
 agent
 .vscode
 .DS_Store
-prod.json
+prod.*
+local.*

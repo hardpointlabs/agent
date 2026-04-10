@@ -1,13 +1,14 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 type AgentConfig struct {
-	OrgId string `json:"org_id"`
+	OrgId string `yaml:"org_id"`
 }
 
 func (ac *AgentConfig) String() string {
@@ -38,11 +39,11 @@ func ParseAgentConfig(configPath string) (*AgentConfig, error) {
 	}
 	defer file.Close()
 
-	decoder := json.NewDecoder(file)
-	var agentConfig *AgentConfig
+	var agentConfig AgentConfig
+	decoder := yaml.NewDecoder(file)
 	err = decoder.Decode(&agentConfig)
 	if err != nil {
 		return nil, err
 	}
-	return agentConfig, nil
+	return &agentConfig, nil
 }
