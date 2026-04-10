@@ -1,3 +1,10 @@
+## [1.1.22](https://github.com/hardpointlabs/agent/compare/v1.1.21...v1.1.22) (2026-04-10)
+
+
+### Bug Fixes
+
+* remove /var/log/hardpoint from ReadWritePaths ([92d2c28](https://github.com/hardpointlabs/agent/commit/92d2c28ced77eb725af248bbdbd0267456b425bb))
+
 ## [1.1.21](https://github.com/hardpointlabs/agent/compare/v1.1.20...v1.1.21) (2026-04-10)
 
 
