@@ -13,7 +13,7 @@ case "$1" in
         mkdir -p /etc/hardpointd
 
         # Create key directory
-        mkdir -p /var/lib/hardpoint
+        mkdir -p /var/lib/hardpointd
 
         # Write config file
         cat > /etc/hardpointd/config.yaml <<EOF
