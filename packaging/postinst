@@ -22,13 +22,22 @@ EOF
 
         # Set proper permissions
         chmod 600 /etc/hardpointd/config.yaml
-        chmod 700 /var/lib/hardpoint
+        chmod 700 /var/lib/hardpointd
 
         # Create a systemd service user
-        useradd -r -s /bin/false hardpoint || true
-        chown hardpoint:hardpoint /etc/hardpointd/config.yaml
-        chown hardpoint:hardpoint /var/lib/hardpoint
+        if ! getent passwd hardpoint >/dev/null; then
+            useradd --system --home-dir /var/lib/hardpointd --shell /bin/false hardpoint
+        fi
 
+        chown hardpoint:hardpoint /etc/hardpointd/config.yaml
+        chown hardpoint:hardpoint /var/lib/hardpointd
+
+        # Reload systemd daemon
+        systemctl daemon-reload
+        
+        # Enable and start service
+        systemctl enable hardpointd.service
+        systemctl start hardpointd.service || true
         ;;
 esac
 

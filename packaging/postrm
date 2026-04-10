@@ -5,7 +5,14 @@ case "$1" in
     purge)
         # Remove config on purge (but not on upgrade/remove)
         rm -rf /etc/hardpointd
-        
+        # Remove log dir
+        rm -rf /var/log/hardpointd
+        # Remove keypair on purge
+        rm -rf /var/lib/hardpointd
+
+        # Remove user
+        userdel hardpoint 2>/dev/null || true
+
         # Clean debconf database
         if [ -x /usr/share/debconf/confmodule ]; then
             . /usr/share/debconf/confmodule

@@ -45,8 +45,13 @@ nfpms:
         dst: /usr/share/debconf/templates/hardpointd
         file_info:
           mode: 0644
+      - src: packaging/hardpointd.service
+        dst: /lib/systemd/system/hardpointd.service
+        file_info:
+          mode: 0644
     scripts:
       postinstall: packaging/postinst
+      preremove: packaging/prerm
       postremove: packaging/postrm
     deb:
       scripts:

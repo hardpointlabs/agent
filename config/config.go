@@ -22,7 +22,7 @@ type Args struct {
 	KeyDir      string       `default:"/var/lib/hardpoint"`
 	AgentConfig *AgentConfig `arg:"-"`
 	ListenCmd   *ListenCmd   `arg:"subcommand:listen" help:"Start the agent and listen for connections"`
-	Config      string       `arg:"required,--config,env" default:"/etc/hardpointd/config.yaml" help:"Path to configuration file"`
+	Config      string       `arg:"--config,env" default:"/etc/hardpointd/config.yaml" help:"Path to configuration file"`
 }
 
 type ListenCmd struct {

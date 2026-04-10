@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    remove|deconfigure)
+        # Stop service before removal
+        systemctl stop hardpointd.service || true
+        systemctl disable hardpointd.service || true
+        ;;
+esac
+
+exit 0
