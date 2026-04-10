@@ -1,3 +1,10 @@
+## [1.1.23](https://github.com/hardpointlabs/agent/compare/v1.1.22...v1.1.23) (2026-04-10)
+
+
+### Bug Fixes
+
+* align paths in go config ([8042a71](https://github.com/hardpointlabs/agent/commit/8042a71e65cb65f89b3fad6397b9a2811a4db9ef))
+
 ## [1.1.22](https://github.com/hardpointlabs/agent/compare/v1.1.21...v1.1.22) (2026-04-10)
 
 
