@@ -1,3 +1,10 @@
+## [1.1.21](https://github.com/hardpointlabs/agent/compare/v1.1.20...v1.1.21) (2026-04-10)
+
+
+### Bug Fixes
+
+* postinst typo ([603c2cd](https://github.com/hardpointlabs/agent/commit/603c2cd795ced7ca0ebe3d057a0dbba67694ef46))
+
 ## [1.1.20](https://github.com/hardpointlabs/agent/compare/v1.1.19...v1.1.20) (2026-04-10)
 
 
