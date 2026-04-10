@@ -1,3 +1,10 @@
+## [1.1.20](https://github.com/hardpointlabs/agent/compare/v1.1.19...v1.1.20) (2026-04-10)
+
+
+### Bug Fixes
+
+* add systemd unit ([264bf95](https://github.com/hardpointlabs/agent/commit/264bf958920f8589d267b97fa163e2a45ca08055))
+
 ## [1.1.19](https://github.com/hardpointlabs/agent/compare/v1.1.18...v1.1.19) (2026-04-09)
 
 
