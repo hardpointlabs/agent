@@ -48,7 +48,7 @@ func main() {
 
 	switch {
 	case args.ListenCmd != nil:
-		agentConf, err := config.ParseAgentConfig(args.ListenCmd.Config)
+		agentConf, err := config.ParseAgentConfig(args.Config)
 		if err != nil {
 			log.Fatalf("Couldn't load config file: %v", err)
 		}
