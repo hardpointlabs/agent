@@ -114,10 +114,10 @@ jobs:
           # Create repo and add packages
           aptly repo create -distribution=stable -component=main hardpoint
           aptly repo add hardpoint ./debs/*.deb
-          
+
           # Create snapshot
           aptly snapshot create hardpoint-${GITHUB_SHA::8} from repo hardpoint
-          
+
           # Publish to R2
           aptly publish snapshot \
             -batch \
