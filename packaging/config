@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+. /usr/share/debconf/confmodule
+
+# Ask for account ID if not already set
+db_input high hardpointd/org_id || true
+db_go || true
+
+exit 0

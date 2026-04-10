@@ -24,7 +24,7 @@ type Args struct {
 }
 
 type ListenCmd struct {
-	Config string `arg:"required,--config,env" help:"Path to configuration file"`
+	Config string `arg:"required,--config,env" default "/etc/hardpointd/config.yaml" help:"Path to configuration file"`
 }
 
 func (Args) Version() string {

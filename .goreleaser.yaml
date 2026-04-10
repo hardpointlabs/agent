@@ -40,6 +40,17 @@ nfpms:
     section: admin
     priority: optional
     bindir: /usr/bin
+    contents:
+      - src: packaging/debconf-templates
+        dst: /usr/share/debconf/templates/hardpointd
+        file_info:
+          mode: 0644
+    scripts:
+      postinstall: packaging/postinst
+      postremove: packaging/postrm
+    deb:
+      scripts:
+        config: packaging/config
 
 # Sign all package artifacts (deb files)
 signs:

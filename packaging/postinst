@@ -1,0 +1,33 @@
+#!/bin/sh
+set -e
+
+. /usr/share/debconf/confmodule
+
+case "$1" in
+    configure)
+        # Get the org ID from debconf
+        db_get hardpointd/org_id
+        ORG_ID="$RET"
+
+        # Create config directory
+        mkdir -p /etc/hardpointd
+
+        # Write config file
+        cat > /etc/hardpointd/config.yaml <<EOF
+org_id: ${ORG_ID}
+EOF
+
+        # Set proper permissions
+        chmod 600 /etc/hardpointd/config.yaml
+
+        # Optional: create a systemd service user
+        # useradd -r -s /bin/false hardpoint || true
+        # chown hardpoint:hardpoint /etc/hardpointd/config.yaml
+        
+        ;;
+esac
+
+# Clean up debconf database
+db_stop
+
+exit 0

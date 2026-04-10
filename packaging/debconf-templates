@@ -1,0 +1,5 @@
+Template: hardpointd/org_id
+Type: string
+Description: Hardpoint Org ID
+ Enter your Hardpoint org ID to link this agent to your account.
+ You can find this in your Hardpoint dashboard.

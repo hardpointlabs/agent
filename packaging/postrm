@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    purge)
+        # Remove config on purge (but not on upgrade/remove)
+        rm -rf /etc/hardpointd
+        
+        # Clean debconf database
+        if [ -x /usr/share/debconf/confmodule ]; then
+            . /usr/share/debconf/confmodule
+            db_purge
+        fi
+        ;;
+esac
+
+exit 0
