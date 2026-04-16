@@ -19,6 +19,7 @@ if is_container; then
 	exit 1
 fi
 
+# Check if we're running as root; if not, check if we have sudo
 if [ "$EUID" -eq 0 ]; then
 	SUDO=""
 else
@@ -30,16 +31,22 @@ else
 	fi
 fi
 
+# Warn about running as root
 if [ "$EUID" -eq 0 ]; then
 	echo "Warning: running as root. This is not recommended but will proceed."
 fi
 
-check_cmd() { command -v "$1" >/dev/null 2>&1; }
-
 # Parse account_id from query string or args
-ACCOUNT_ID="${1}"
+if [ "$#" -lt 1 ] || [ -z "$1" ]; then
+  echo "Usage: curl -s https://pkg.hardpoint.dev/setup.sh | bash -s YOUR_ACCOUNT_ID"
+  exit 1
+fi
+
+ACCOUNT_ID="$1"
 
 echo "Checking for dependencies"
+
+check_cmd() { command -v "$1" >/dev/null 2>&1; }
 
 missing_pkgs=()
 
@@ -57,11 +64,6 @@ if [ ${#missing_pkgs[@]} -gt 0 ]; then
     $SUDO apt-get update
   fi
   $SUDO apt-get install -y "${missing_pkgs[@]}"
-fi
-
-if [ -z "$ACCOUNT_ID" ]; then
-	echo "Usage: curl -s https://pkg.hardpoint.dev/setup.sh | bash -s YOUR_ACCOUNT_ID"
-	exit 1
 fi
 
 # Add GPG key
