@@ -32,19 +32,23 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Fetch tags
+        if: steps.semantic.outputs.new_release == 'true'
         run: git fetch --force --tags
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Login to GHCR
+        if: steps.semantic.outputs.new_release == 'true'
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
       - name: Install Syft
+        if: steps.semantic.outputs.new_release == 'true'
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
       - name: Import GPG key
+        if: steps.semantic.outputs.new_release == 'true'
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --import
           gpg --list-secret-keys --keyid-format=long
