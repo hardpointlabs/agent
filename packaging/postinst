@@ -22,7 +22,7 @@ EOF
 
         # Set proper permissions
         chmod 600 /etc/hardpointd/config.yaml
-        chmod 700 /var/lib/hardpointd
+        chmod 755 /var/lib/hardpointd
 
         # Create a systemd service user
         if ! getent passwd hardpoint >/dev/null; then

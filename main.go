@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"path/filepath"
 
 	_ "embed"
 
@@ -47,6 +48,14 @@ func main() {
 	p.MustParse(os.Args[1:])
 
 	switch {
+	case args.FingerprintCmd != nil:
+		fingerprint, err := os.ReadFile(filepath.Join(args.KeyDir, "/fingerprint"))
+		if err != nil {
+			os.Stderr.WriteString(err.Error() + "\n")
+			os.Exit(1)
+		}
+		os.Stdout.Write(fingerprint)
+		os.Stdout.WriteString("\n")
 	case args.ListenCmd != nil:
 		agentConf, err := config.ParseAgentConfig(args.Config)
 		if err != nil {

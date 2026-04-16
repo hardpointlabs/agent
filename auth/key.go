@@ -37,9 +37,16 @@ func LoadOrCreateKeyPair(path string) (*KeyPair, error) {
 		return nil, err
 	}
 
+	kp := &KeyPair{private: priv, Public: pub}
+
+	fingerprintFile := filepath.Join(path, "/fingerprint")
+	if err := os.WriteFile(fingerprintFile, kp.Fingerprint(), 0644); err != nil {
+		return nil, err
+	}
+
 	log.Printf("No key pair found, created a new one in %s\n", keyFile)
 
-	return &KeyPair{private: priv, Public: pub}, nil
+	return kp, nil
 }
 
 func (k *KeyPair) Sign(input []byte) ([]byte, error) {

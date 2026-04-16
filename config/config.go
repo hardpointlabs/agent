@@ -17,15 +17,19 @@ func (ac *AgentConfig) String() string {
 
 // CLI Arguments
 type Args struct {
-	SkipTls     bool         `arg:"--skip-tls,env:SKIP_TLS" default:"false" help:"Bypass TLS certificate validation"`
-	Relay       string       `arg:"env" default:"relay.hardpoint.dev:443" help:"Relay endpoint"`
-	KeyDir      string       `default:"/var/lib/hardpointd"`
-	AgentConfig *AgentConfig `arg:"-"`
-	ListenCmd   *ListenCmd   `arg:"subcommand:listen" help:"Start the agent and listen for connections"`
-	Config      string       `arg:"--config,env" default:"/etc/hardpointd/config.yaml" help:"Path to configuration file"`
+	SkipTls        bool            `arg:"--skip-tls,env:SKIP_TLS" default:"false" help:"Bypass TLS certificate validation"`
+	Relay          string          `arg:"env" default:"relay.hardpoint.dev:443" help:"Relay endpoint"`
+	KeyDir         string          `default:"/var/lib/hardpointd"`
+	AgentConfig    *AgentConfig    `arg:"-"`
+	ListenCmd      *ListenCmd      `arg:"subcommand:listen" help:"Start the agent and listen for connections"`
+	FingerprintCmd *FingerprintCmd `arg:"subcommand:fingerprint" help:"Print the agent fingerprint"`
+	Config         string          `arg:"--config,env" default:"/etc/hardpointd/config.yaml" help:"Path to configuration file"`
 }
 
 type ListenCmd struct {
+}
+
+type FingerprintCmd struct {
 }
 
 func (Args) Version() string {
