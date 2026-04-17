@@ -1,3 +1,10 @@
+## [1.1.27](https://github.com/hardpointlabs/agent/compare/v1.1.26...v1.1.27) (2026-04-17)
+
+
+### Bug Fixes
+
+* include env vars as well as command line flags ([47f3fd5](https://github.com/hardpointlabs/agent/commit/47f3fd57083227ae8bd2ee4d6c382393ba1751ec))
+
 ## [1.1.26](https://github.com/hardpointlabs/agent/compare/v1.1.25...v1.1.26) (2026-04-17)
 
 
