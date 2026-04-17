@@ -115,11 +115,6 @@ homebrew_casks:
       email: chris.mowforth@hardpoint.dev
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
     description: "Hardpoint agent"
-    hooks:
-      post:
-        install: |
-          bin.install "hardpointd"
-          system "#{bin}/hardpointd --version"
     repository:
       owner: hardpointlabs
       name: homebrew-agent
