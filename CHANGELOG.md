@@ -1,3 +1,10 @@
+## [1.1.24](https://github.com/hardpointlabs/agent/compare/v1.1.23...v1.1.24) (2026-04-17)
+
+
+### Bug Fixes
+
+* s/listen/connect/, add init command for interactive users ([913ab75](https://github.com/hardpointlabs/agent/commit/913ab75c7fcb1326c3e3341c2f69c386f4df52ef))
+
 ## [1.1.23](https://github.com/hardpointlabs/agent/compare/v1.1.22...v1.1.23) (2026-04-10)
 
 
