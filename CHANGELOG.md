@@ -1,3 +1,10 @@
+## [1.1.28](https://github.com/hardpointlabs/agent/compare/v1.1.27...v1.1.28) (2026-04-17)
+
+
+### Bug Fixes
+
+* use default binary-linking flow in homebrew ([a3441a5](https://github.com/hardpointlabs/agent/commit/a3441a5f185289d823cf120773136ea77fe96f47))
+
 ## [1.1.27](https://github.com/hardpointlabs/agent/compare/v1.1.26...v1.1.27) (2026-04-17)
 
 
