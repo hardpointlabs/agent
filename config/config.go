@@ -1,15 +1,48 @@
 package config
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/alexflint/go-arg"
 	"gopkg.in/yaml.v3"
 )
+
+func isContainer() bool {
+	if _, err := os.Stat("/.dockerenv"); err == nil {
+		return true
+	}
+
+	file, err := os.Open("/proc/1/cgroup")
+	if err != nil {
+		return false
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if containsContainerMarker(line) {
+			return true
+		}
+	}
+	return false
+}
+
+func containsContainerMarker(s string) bool {
+	markers := []string{"docker", "lxc", "containerd", "kubepods"}
+	for _, marker := range markers {
+		if strings.Contains(s, marker) {
+			return true
+		}
+	}
+	return false
+}
 
 type agentConfig struct {
 	OrgId string `yaml:"org_id"`
@@ -97,23 +130,32 @@ func ParseArgsAndLayerDefaults() (*ParseResult, error) {
 	}
 
 	if parsed.KeyDir == "" {
-		homeDir, err := os.UserHomeDir()
-		if err == nil {
-			configDir := filepath.Join(homeDir, ".config", "hardpointd")
-			if _, err := os.Stat(configDir); err == nil {
-				parsed.KeyDir = configDir
-			} else if runtime.GOOS == "darwin" {
-				if err := os.MkdirAll(configDir, 0755); err != nil {
-					return nil, fmt.Errorf("failed to create key directory: %w", err)
-				}
-				parsed.KeyDir = configDir
+		if isContainer() {
+			tmpDir := "/tmp/hardpointd"
+			if err := os.MkdirAll(tmpDir, 0755); err != nil {
+				return nil, fmt.Errorf("failed to create key directory: %w", err)
 			}
-		}
-		if parsed.KeyDir == "" {
-			if _, err := os.Stat("/var/lib/hardpointd"); err == nil {
-				parsed.KeyDir = "/var/lib/hardpointd"
-			} else {
-				return nil, fmt.Errorf("key directory not found")
+			log.Printf("Running in a container, using %s as the key directory\n", tmpDir)
+			parsed.KeyDir = tmpDir
+		} else {
+			homeDir, err := os.UserHomeDir()
+			if err == nil {
+				configDir := filepath.Join(homeDir, ".config", "hardpointd")
+				if _, err := os.Stat(configDir); err == nil {
+					parsed.KeyDir = configDir
+				} else if runtime.GOOS == "darwin" {
+					if err := os.MkdirAll(configDir, 0755); err != nil {
+						return nil, fmt.Errorf("failed to create key directory: %w", err)
+					}
+					parsed.KeyDir = configDir
+				}
+			}
+			if parsed.KeyDir == "" {
+				if _, err := os.Stat("/var/lib/hardpointd"); err == nil {
+					parsed.KeyDir = "/var/lib/hardpointd"
+				} else {
+					return nil, fmt.Errorf("key directory not found")
+				}
 			}
 		}
 	}
