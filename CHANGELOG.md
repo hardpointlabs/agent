@@ -1,3 +1,10 @@
+## [1.1.26](https://github.com/hardpointlabs/agent/compare/v1.1.25...v1.1.26) (2026-04-17)
+
+
+### Bug Fixes
+
+* stat .containerenv for podman ([9fc82d0](https://github.com/hardpointlabs/agent/commit/9fc82d0df1c6d4fa22bd936933a283498b2700f6))
+
 ## [1.1.25](https://github.com/hardpointlabs/agent/compare/v1.1.24...v1.1.25) (2026-04-17)
 
 
