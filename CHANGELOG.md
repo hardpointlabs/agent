@@ -1,3 +1,10 @@
+## [1.1.29](https://github.com/hardpointlabs/agent/compare/v1.1.28...v1.1.29) (2026-04-17)
+
+
+### Bug Fixes
+
+* use ephemeral keys in containers and avoid touching FS ([74b2729](https://github.com/hardpointlabs/agent/commit/74b2729c7d53252381390635ecec4492a0c12d1c))
+
 ## [1.1.28](https://github.com/hardpointlabs/agent/compare/v1.1.27...v1.1.28) (2026-04-17)
 
 
