@@ -1,54 +1,16 @@
 package config
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 
 	"github.com/alexflint/go-arg"
+	"github.com/hardpointlabs/agent/common"
 	"gopkg.in/yaml.v3"
 )
-
-func isContainer() bool {
-	//  docker
-	if _, err := os.Stat("/.dockerenv"); err == nil {
-		return true
-	}
-
-	// podman
-	if _, err := os.Stat("/run/.containerenv"); err == nil {
-		return true
-	}
-
-	file, err := os.Open("/proc/1/cgroup")
-	if err != nil {
-		return false
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if containsContainerMarker(line) {
-			return true
-		}
-	}
-	return false
-}
-
-func containsContainerMarker(s string) bool {
-	markers := []string{"docker", "lxc", "containerd", "kubepods"}
-	for _, marker := range markers {
-		if strings.Contains(s, marker) {
-			return true
-		}
-	}
-	return false
-}
 
 type agentConfig struct {
 	OrgId string `yaml:"org_id"`
@@ -136,13 +98,8 @@ func ParseArgsAndLayerDefaults() (*ParseResult, error) {
 	}
 
 	if parsed.KeyDir == "" {
-		if isContainer() {
-			tmpDir := "/tmp/hardpointd"
-			if err := os.MkdirAll(tmpDir, 0755); err != nil {
-				return nil, fmt.Errorf("failed to create key directory: %w", err)
-			}
-			log.Printf("Running in a container, using %s as the key directory\n", tmpDir)
-			parsed.KeyDir = tmpDir
+		if common.IsContainer() {
+			log.Printf("Running in a container, storing keys in memory instead of the file system")
 		} else {
 			homeDir, err := os.UserHomeDir()
 			if err == nil {

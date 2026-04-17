@@ -10,22 +10,45 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
-// don't want to expose the private half outside the auth package to prevent
-// people accidentally sending it down the wire :)
+var (
+	cachedKeyPair *KeyPair
+	cacheOnce     sync.Once
+	cachePath     string
+	cacheErr      error
+)
+
 type KeyPair struct {
 	private ed25519.PrivateKey
 	Public  ed25519.PublicKey
 }
 
 func LoadOrCreateKeyPair(path string) (*KeyPair, error) {
+	if path == "" {
+		// in container environments we may not have a writable
+		// file system, so just generate an ephemeral keypair
+		// in memory
+		cacheOnce.Do(func() {
+			cachedKeyPair, cacheErr = generateKeyPair()
+		})
+		return cachedKeyPair, cacheErr
+	}
+
+	if path == cachePath && cachedKeyPair != nil {
+		return cachedKeyPair, nil
+	}
+
 	keyFile := filepath.Join(path, "/key")
 	log.Printf("Looking for private key %s\n", keyFile)
 	if b, err := os.ReadFile(keyFile); err == nil {
 		priv := ed25519.PrivateKey(b)
 		pub := priv.Public().(ed25519.PublicKey)
-		return &KeyPair{private: priv, Public: pub}, nil
+		kp := &KeyPair{private: priv, Public: pub}
+		cachedKeyPair = kp
+		cachePath = path
+		return kp, nil
 	}
 
 	pub, priv, err := ed25519.GenerateKey(rand.Reader)
@@ -44,9 +67,20 @@ func LoadOrCreateKeyPair(path string) (*KeyPair, error) {
 		return nil, err
 	}
 
+	cachedKeyPair = kp
+	cachePath = path
+
 	log.Printf("No key pair found, created a new one in %s\n", keyFile)
 
 	return kp, nil
+}
+
+func generateKeyPair() (*KeyPair, error) {
+	pub, priv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+	return &KeyPair{private: priv, Public: pub}, nil
 }
 
 func (k *KeyPair) Sign(input []byte) ([]byte, error) {
