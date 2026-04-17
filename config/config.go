@@ -14,7 +14,13 @@ import (
 )
 
 func isContainer() bool {
+	//  docker
 	if _, err := os.Stat("/.dockerenv"); err == nil {
+		return true
+	}
+
+	// podman
+	if _, err := os.Stat("/run/.containerenv"); err == nil {
 		return true
 	}
 
