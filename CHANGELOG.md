@@ -1,3 +1,10 @@
+## [1.1.25](https://github.com/hardpointlabs/agent/compare/v1.1.24...v1.1.25) (2026-04-17)
+
+
+### Bug Fixes
+
+* use temp dir for key storage when running in a container ([57d7174](https://github.com/hardpointlabs/agent/commit/57d71746b806d185978e1c05ddfbe358671120fc))
+
 ## [1.1.24](https://github.com/hardpointlabs/agent/compare/v1.1.23...v1.1.24) (2026-04-17)
 
 
