@@ -8,7 +8,7 @@ Wants=network-online.target
 Type=simple
 User=hardpoint
 Group=hardpoint
-ExecStart=/usr/bin/hardpointd listen
+ExecStart=/usr/bin/hardpointd connect
 Restart=on-failure
 RestartSec=5s
 

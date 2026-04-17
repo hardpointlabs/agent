@@ -1,6 +1,6 @@
 #!/bin/bash
 # setup.sh - hosted at pkg.hardpoint.dev/setup.sh
-# Copyright 2026 Hardpoint Labs
+# Copyright 2026 Hardpoint Labs. All rights reserved.
 #
 # Consult the documentation at https://docs.hardpoint.dev for more information
 
@@ -36,13 +36,13 @@ if [ "$EUID" -eq 0 ]; then
 	echo "Warning: running as root. This is not recommended but will proceed."
 fi
 
-# Parse account_id from query string or args
+# Parse ORG_ID from query string or args
 if [ "$#" -lt 1 ] || [ -z "$1" ]; then
-  echo "Usage: curl -s https://pkg.hardpoint.dev/setup.sh | bash -s YOUR_ACCOUNT_ID"
-  exit 1
+	echo "Usage: curl -s https://pkg.hardpoint.dev/setup.sh | bash -s YOUR_ORG_ID"
+	exit 1
 fi
 
-ACCOUNT_ID="$1"
+ORG_ID="$1"
 
 echo "Checking for dependencies"
 
@@ -57,13 +57,13 @@ dpkg -s ca-certificates >/dev/null 2>&1 || missing_pkgs+=("ca-certificates")
 # although we need sudo, we're handling it separately
 
 if [ ${#missing_pkgs[@]} -gt 0 ]; then
-  echo "Installing missing packages: ${missing_pkgs[*]}"
+	echo "Installing missing packages: ${missing_pkgs[*]}"
 
-  # avoid forcing update if not needed
-  if [ ! -f /var/lib/apt/periodic/update-success-stamp ]; then
-    $SUDO apt-get update
-  fi
-  $SUDO apt-get install -y "${missing_pkgs[@]}"
+	# avoid forcing update if not needed
+	if [ ! -f /var/lib/apt/periodic/update-success-stamp ]; then
+		$SUDO apt-get update
+	fi
+	$SUDO apt-get install -y "${missing_pkgs[@]}"
 fi
 
 # Add GPG key
@@ -76,12 +76,12 @@ echo "deb [signed-by=/usr/share/keyrings/hardpoint-archive-keyring.gpg] https://
 $SUDO apt-get update
 
 # Preseed debconf to avoid interactive prompt
-echo "hardpointd hardpointd/account_id string ${ACCOUNT_ID}" | $SUDO debconf-set-selections
+echo "hardpointd hardpointd/org_id string ${ORG_ID}" | $SUDO debconf-set-selections
 
 # Install non-interactively
 $SUDO DEBIAN_FRONTEND=noninteractive apt-get install -y hardpointd
 
-echo "✓ Hardpoint agent installed with account ID: ${ACCOUNT_ID}"
+echo "✓ Hardpoint agent installed with Org ID: ${ORG_ID}"
 echo "✓ Config written to /etc/hardpointd/config.yaml"
 FINGERPRINT=$(hardpointd fingerprint)
 echo "✓ Agent fingerprint is ${FINGERPRINT}"

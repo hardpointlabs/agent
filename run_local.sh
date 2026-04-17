@@ -2,4 +2,4 @@
 
 set -euo pipefail
 
-./agent listen --relay localhost:8080 --skip-tls --config ./local.yaml
+./agent connect --relay localhost:8080 --skip-tls --config ./local.yaml

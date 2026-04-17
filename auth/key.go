@@ -62,3 +62,13 @@ func (k *KeyPair) Fingerprint() []byte {
 	h := sha256.Sum256(k.Public)
 	return []byte(hex.EncodeToString(h[:]))[:32]
 }
+
+func ReadFingerprintFromFile(keyDir string) {
+	fingerprint, err := os.ReadFile(filepath.Join(keyDir, "/fingerprint"))
+	if err != nil {
+		os.Stderr.WriteString(err.Error() + "\n")
+		os.Exit(1)
+	}
+	os.Stdout.Write(fingerprint)
+	os.Stdout.WriteString("\n")
+}

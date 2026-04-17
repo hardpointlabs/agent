@@ -2,12 +2,9 @@ package main
 
 import (
 	"log"
-	"os"
-	"path/filepath"
 
 	_ "embed"
 
-	"github.com/alexflint/go-arg"
 	"github.com/hardpointlabs/agent/auth"
 	"github.com/hardpointlabs/agent/config"
 	"github.com/hardpointlabs/agent/control"
@@ -27,7 +24,7 @@ func clientMain(args config.Args) error {
 		log.Println("Unable to establish relay connection")
 		return err
 	}
-	coordinator, err := control.CreateCoordinator(conn, keyPair, args.AgentConfig)
+	coordinator, err := control.CreateCoordinator(conn, keyPair, args.ConnectCmd.OrgId)
 	if err != nil {
 		return err
 	}
@@ -37,35 +34,21 @@ func clientMain(args config.Args) error {
 }
 
 func main() {
-	var args config.Args
-	p, err := arg.NewParser(arg.Config{
-		EnvPrefix: "HARDPOINT_",
-		IgnoreEnv: true,
-	}, &args)
+	parsed, err := config.ParseArgsAndLayerDefaults()
 	if err != nil {
-		log.Fatalf("Failed to create argument parser: %v", err)
+		log.Fatalf("%v", err)
 	}
-	p.MustParse(os.Args[1:])
 
 	switch {
-	case args.FingerprintCmd != nil:
-		fingerprint, err := os.ReadFile(filepath.Join(args.KeyDir, "/fingerprint"))
-		if err != nil {
-			os.Stderr.WriteString(err.Error() + "\n")
-			os.Exit(1)
+	case parsed.Args.FingerprintCmd != nil:
+		auth.ReadFingerprintFromFile(parsed.Args.KeyDir)
+	case parsed.Args.ConnectCmd != nil:
+		if err := clientMain(parsed.Args); err != nil {
+			log.Panicf("Failed to start tunnel: %v\n", err)
 		}
-		os.Stdout.Write(fingerprint)
-		os.Stdout.WriteString("\n")
-	case args.ListenCmd != nil:
-		agentConf, err := config.ParseAgentConfig(args.Config)
-		if err != nil {
-			log.Fatalf("Couldn't load config file: %v", err)
-		}
-		args.AgentConfig = agentConf
-		if err := clientMain(args); err != nil {
-			log.Panicf("Something went wrong: %v\n", err)
-		}
+	case parsed.Args.InitCmd != nil:
+		parsed.SetOrgId()
 	default:
-		p.WriteHelp(os.Stdout)
+		parsed.PrintUsage()
 	}
 }

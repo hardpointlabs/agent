@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/hardpointlabs/agent/auth"
-	"github.com/hardpointlabs/agent/config"
 	"github.com/hardpointlabs/lpstream"
 	"github.com/quic-go/quic-go"
 )
@@ -188,7 +187,7 @@ func (c *controlStream) helloMessage(orgId string) []byte {
 	return helloMessage
 }
 
-func CreateCoordinator(connection *quic.Conn, keyPair *auth.KeyPair, config *config.AgentConfig) (*Coordinator, error) {
+func CreateCoordinator(connection *quic.Conn, keyPair *auth.KeyPair, orgId string) (*Coordinator, error) {
 	stream, err := connection.OpenStreamSync(context.Background())
 	if err != nil {
 		return nil, err
@@ -198,7 +197,7 @@ func CreateCoordinator(connection *quic.Conn, keyPair *auth.KeyPair, config *con
 		FrameCodec: lpstream.NewFrameCodec(stream),
 		AuthState:  StateHello,
 		keyPair:    keyPair,
-		OrgId:      config.OrgId,
+		OrgId:      orgId,
 	}
 	return &Coordinator{connection: connection, controlStream: controlStream}, nil
 }
