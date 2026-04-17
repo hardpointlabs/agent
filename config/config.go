@@ -113,7 +113,7 @@ func parseArgs() *ParseResult {
 	var args Args
 	p, err := arg.NewParser(arg.Config{
 		EnvPrefix: "HARDPOINT_",
-		IgnoreEnv: true,
+		IgnoreEnv: false,
 	}, &args)
 	if err != nil {
 		log.Fatalf("Failed to create argument parser: %v", err)
