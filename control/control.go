@@ -408,11 +408,11 @@ func pipeWithEncryption(quicStream *quic.Stream, tcpConn net.Conn, sharedSecret 
 	go pipe(tcpConn, gcmCodec, done)
 	go pipe(gcmCodec, tcpConn, done)
 
+	<-done
+	<-done
+
 	tcpConn.Close()
 	quicStream.Close()
-
-	<-done
-	<-done
 }
 
 func (c *Coordinator) Close() error {
