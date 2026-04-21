@@ -1,9 +1,17 @@
 package control
 
 import (
+	"bytes"
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/mlkem"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -13,6 +21,7 @@ import (
 	"github.com/hardpointlabs/agent/auth"
 	"github.com/hardpointlabs/lpstream"
 	"github.com/quic-go/quic-go"
+	"golang.org/x/crypto/hkdf"
 )
 
 // we need some kind of state machine where we
@@ -131,19 +140,13 @@ func (c *controlStream) waitApproval() error {
 	}
 }
 
-func (c *controlStream) findService(name string) *string {
-	return &name
-}
-
-func pipe(reader io.Reader, writer io.Writer, closer io.Closer, done chan<- struct{}) {
+func pipe(reader, writer io.ReadWriteCloser, done chan<- struct{}) {
 	defer func() {
 		log.Printf("pipe done: reader=%T, writer=%T", reader, writer)
 		done <- struct{}{}
 	}()
 	n, err := io.Copy(writer, reader)
 	log.Printf("io.Copy transferred %d bytes, err=%v", n, err)
-	closer.Close()
-	log.Printf("closed closer: %T", closer)
 }
 
 func (c *controlStream) doHandshake() error {
@@ -171,13 +174,13 @@ func (c *controlStream) helloMessage(orgId string) []byte {
 	fingerprint := c.keyPair.Fingerprint()
 	timestamp := timeNowBytes()
 
-	helloMessage := []byte("HELLO.")
+	helloMessage := []byte("HELLO,")
 	helloMessage = append(helloMessage, fingerprint...)
-	helloMessage = append(helloMessage, '.')
+	helloMessage = append(helloMessage, ',')
 	helloMessage = append(helloMessage, []byte(orgId)...)
-	helloMessage = append(helloMessage, '.')
+	helloMessage = append(helloMessage, ',')
 	helloMessage = append(helloMessage, timestamp...)
-	helloMessage = append(helloMessage, '.')
+	helloMessage = append(helloMessage, ',')
 	sig, err := c.keyPair.Sign(helloMessage)
 	if err != nil {
 		log.Panicf("Error signing HELLO message %v\n", err)
@@ -185,6 +188,116 @@ func (c *controlStream) helloMessage(orgId string) []byte {
 
 	helloMessage = append(helloMessage, sig...)
 	return helloMessage
+}
+
+type connectRequest struct {
+	Dest             string
+	EncapsulationKey []byte // Probably remove
+}
+
+func parseConnectMessage(message string) (connectRequest, error) {
+	parts := strings.Split(message, ",")
+	if len(parts) != 3 {
+		return connectRequest{}, fmt.Errorf("invalid CONNECT message format: expected 3 parts, got %d", len(parts))
+	}
+
+	if parts[0] != "CONNECT" {
+		return connectRequest{}, fmt.Errorf("invalid message type: expected CONNECT, got %s", parts[0])
+	}
+
+	dest := parts[1]
+
+	return connectRequest{
+		Dest: dest,
+	}, nil
+}
+
+const (
+	ivLength         = 12
+	authTagLength    = 16
+	derivedKeyLength = 32
+)
+
+type gcmCodec struct {
+	frameDecoder *lpstream.Decoder
+	frameEncoder *lpstream.Encoder
+	gcm          cipher.AEAD
+}
+
+func newGcmCodec(sharedSecret []byte, codec *lpstream.FrameCodec) *gcmCodec {
+	reader := hkdf.New(sha256.New, sharedSecret, nil, nil)
+	derivedKey := make([]byte, derivedKeyLength)
+	if _, err := io.ReadFull(reader, derivedKey); err != nil {
+		panic(err)
+	}
+	block, _ := aes.NewCipher(derivedKey)
+	gcm, _ := cipher.NewGCM(block)
+	return &gcmCodec{frameDecoder: codec.Decoder, frameEncoder: codec.Encoder, gcm: gcm}
+}
+
+func (rw *gcmCodec) Read(p []byte) (n int, err error) {
+	encryptedFrame, err := rw.frameDecoder.ReadFrame()
+	if err != nil {
+		log.Println("err reading frame for some reason")
+		return 0, err
+	}
+
+	log.Println("got incoming encrypted data frame")
+
+	iv := encryptedFrame[:ivLength]
+	ciphertext := make([]byte, len(encryptedFrame)-ivLength)
+	copy(ciphertext, encryptedFrame[ivLength:])
+	authTag := encryptedFrame[len(encryptedFrame)-authTagLength:]
+
+	log.Printf("frame len=%d", len(encryptedFrame))
+	log.Printf("iv len=%d", len(iv))
+	log.Printf("tag len=%d", len(authTag))
+
+	log.Println("iv", fmt.Sprintf("%x", sha256.Sum256(iv)))
+	log.Println("tag", fmt.Sprintf("%x", sha256.Sum256(authTag)))
+	log.Println("ciphertext", fmt.Sprintf("%x", sha256.Sum256(ciphertext)))
+
+	plaintext, err := rw.gcm.Open(nil, iv, ciphertext, nil)
+	if err != nil {
+		log.Println("error decrypting")
+		return 0, err
+	}
+
+	fmt.Println("Got some plaintext yo !")
+
+	copied := copy(p, plaintext)
+	log.Printf("Copied %d / %d bytes", copied, len(plaintext))
+	return copied, nil
+}
+
+func (rw *gcmCodec) Write(p []byte) (n int, err error) {
+	log.Println("writing response...")
+
+	iv := make([]byte, ivLength)
+	if _, err := rand.Read(iv); err != nil {
+		return 0, err
+	}
+
+	ciphertext := rw.gcm.Seal(nil, iv, p, nil)
+	authTag := ciphertext[len(p):]
+
+	var payload bytes.Buffer
+	payload.Grow(ivLength + authTagLength + len(ciphertext))
+	payload.Write(iv)
+	payload.Write(authTag)
+	payload.Write(ciphertext)
+
+	err = rw.frameEncoder.WriteFrame(payload.Bytes())
+	if err != nil {
+		return 0, err
+	}
+
+	return len(p), nil
+}
+
+func (rw *gcmCodec) Close() error {
+	log.Println("Closing now!")
+	return nil
 }
 
 func CreateCoordinator(connection *quic.Conn, keyPair *auth.KeyPair, orgId string) (*Coordinator, error) {
@@ -237,49 +350,69 @@ func (c *Coordinator) handleStream(stream *quic.Stream) {
 
 	log.Printf("Received: %q", msg)
 
-	msgStr := string(msg)
-	if !strings.HasPrefix(msgStr, "CONNECT.") {
-		log.Printf("Unexpected message: %s", msgStr)
-		stream.Close()
-		return
-	}
-
-	serviceName := strings.TrimPrefix(msgStr, "CONNECT.")
-	log.Printf("Service requested: %s", serviceName)
-
-	service := c.controlStream.findService(serviceName)
-	if service == nil {
-		log.Printf("Unknown service: %s", serviceName)
-		codec.WriteFrame([]byte("ERROR.unknown_service"))
-		stream.Close()
-		return
-	}
-
-	log.Printf("Dialing %s...", *service)
-	tcpConn, err := net.Dial("tcp", *service)
+	connReq, err := parseConnectMessage(string(msg))
 	if err != nil {
-		log.Printf("Failed to connect to %s", *service)
+		log.Printf("Failed to parse CONNECT message: %v", err)
+		codec.WriteFrame([]byte("ERROR.invalid_connect_message"))
+		stream.Close()
+		return
+	}
+
+	log.Printf("Service requested: %s", connReq.Dest)
+
+	log.Printf("Dialing %s...", connReq.Dest)
+	tcpConn, err := net.Dial("tcp", connReq.Dest)
+	if err != nil {
+		log.Printf("Failed to connect to %s", connReq.Dest)
 		codec.WriteFrame([]byte("ERROR.connection_failed"))
 		stream.Close()
 		return
 	}
 
-	log.Println("Writing OK to stream")
-	err = codec.WriteFrame([]byte("OK"))
+	dk, _ := mlkem.GenerateKey768()
+	encapsulationKey := dk.EncapsulationKey().Bytes()
+
+	ourPubKeyEncoded := base64.StdEncoding.EncodeToString(encapsulationKey)
+	log.Printf("Responding with our ECDH pubkey: %s", ourPubKeyEncoded)
+	okResp := fmt.Sprintf("OK,%s", ourPubKeyEncoded)
+	err = codec.WriteFrame([]byte(okResp))
 	if err != nil {
 		log.Printf("Error writing OK: %v", err)
+		stream.Close()
+		stream.CancelRead(0)
+		tcpConn.Close()
 		return
 	}
-	log.Println("OK written, starting pipes (raw byte mode)")
+
+	ciphertext, _ := codec.ReadFrame()
+	log.Println("Got ciphertext from client")
+
+	sharedSecret, err := dk.Decapsulate(ciphertext)
+	if err != nil {
+		log.Println("Some error getting shared secret", err)
+	} else {
+		log.Println("shared secret", fmt.Sprintf("%x", sha256.Sum256(sharedSecret)))
+	}
+
+	pipeWithEncryption(stream, tcpConn, sharedSecret)
+	log.Println("Pipes finished, handleStream returning")
+}
+
+func pipeWithEncryption(quicStream *quic.Stream, tcpConn net.Conn, sharedSecret []byte) {
+	log.Println("Piping traffic between stream & TCP socket")
+
+	frameCodec := lpstream.NewFrameCodec(quicStream)
+	gcmCodec := newGcmCodec(sharedSecret, frameCodec)
 
 	done := make(chan struct{}, 2)
-	go pipe(tcpConn, stream, stream, done)
-	go pipe(stream, tcpConn, tcpConn, done)
+	go pipe(tcpConn, gcmCodec, done)
+	go pipe(gcmCodec, tcpConn, done)
 
-	log.Println("Waiting for pipes to finish")
+	tcpConn.Close()
+	quicStream.Close()
+
 	<-done
 	<-done
-	log.Println("Pipes finished, handleStream returning")
 }
 
 func (c *Coordinator) Close() error {
