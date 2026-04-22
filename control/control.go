@@ -60,7 +60,7 @@ func (c *controlStream) Close() error {
 var ErrHandshakeFailed = errors.New("Handshake failure")
 
 func (c *controlStream) sendHello() error {
-	if err := c.WriteFrame(c.helloMessage(c.OrgId)); err != nil {
+	if err := c.WriteFrame(c.helloMessage(c.OrgId, make(map[string]string))); err != nil {
 		log.Println("Error writing HELLO message")
 		c.AuthState = StateError
 		return err
@@ -170,7 +170,7 @@ func (c *controlStream) doHandshake() error {
 	}
 }
 
-func (c *controlStream) helloMessage(orgId string) []byte {
+func (c *controlStream) helloMessage(orgId string, additionalInfo map[string]string) []byte {
 	fingerprint := c.keyPair.Fingerprint()
 	timestamp := timeNowBytes()
 
@@ -279,13 +279,16 @@ func (rw *gcmCodec) Write(p []byte) (n int, err error) {
 	}
 
 	ciphertext := rw.gcm.Seal(nil, iv, p, nil)
-	authTag := ciphertext[len(p):]
 
 	var payload bytes.Buffer
-	payload.Grow(ivLength + authTagLength + len(ciphertext))
+	payload.Grow(ivLength + len(ciphertext))
 	payload.Write(iv)
-	payload.Write(authTag)
 	payload.Write(ciphertext)
+
+	authTag := ciphertext[len(ciphertext)-authTagLength:]
+	log.Println("iv", fmt.Sprintf("%x", sha256.Sum256(iv)))
+	log.Println("tag", fmt.Sprintf("%x", sha256.Sum256(authTag)))
+	log.Println("ciphertext", fmt.Sprintf("%x", sha256.Sum256(ciphertext)))
 
 	err = rw.frameEncoder.WriteFrame(payload.Bytes())
 	if err != nil {
@@ -330,7 +333,14 @@ func (c *Coordinator) acceptLoop() error {
 	for {
 		stream, err := c.connection.AcceptStream(context.Background())
 		if err != nil {
-			log.Printf("Error accepting stream: %v", err)
+			if appErr, ok := errors.AsType[*quic.ApplicationError](err); ok {
+				if appErr.ErrorCode == 0x00 {
+					// It's *us* that's leaving, presumably due to receiving SIGINT
+					return nil
+				}
+			} else {
+				log.Printf("Error accepting stream: %v", err)
+			}
 			return err
 		}
 		go c.handleStream(stream)
@@ -416,6 +426,8 @@ func pipeWithEncryption(quicStream *quic.Stream, tcpConn net.Conn, sharedSecret 
 }
 
 func (c *Coordinator) Close() error {
+	log.Println("Shutting down coordinator")
+	c.connection.CloseWithError(quic.ApplicationErrorCode(0), "Agent going away")
 	return c.controlStream.Close()
 }
 

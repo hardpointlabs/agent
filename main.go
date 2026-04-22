@@ -1,13 +1,18 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
+	"os"
+	"os/signal"
 
 	_ "embed"
 
 	"github.com/hardpointlabs/agent/auth"
 	"github.com/hardpointlabs/agent/config"
 	"github.com/hardpointlabs/agent/control"
+	"golang.org/x/sync/errgroup"
 )
 
 func clientMain(args config.Args) error {
@@ -28,9 +33,26 @@ func clientMain(args config.Args) error {
 	if err != nil {
 		return err
 	}
-	defer coordinator.Close()
 
-	return coordinator.Start()
+	g, ctx := errgroup.WithContext(context.Background())
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
+	defer stop()
+
+	g.Go(func() error {
+		return coordinator.Start()
+	})
+
+	g.Go(func() error {
+		<-ctx.Done()
+		return coordinator.Close()
+	})
+
+	if err = g.Wait(); err != nil {
+		fmt.Println("Terminated with error:", err)
+	}
+	log.Println("Agent stopped")
+
+	return err
 }
 
 func main() {

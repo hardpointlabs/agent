@@ -38,6 +38,7 @@ func DialRelay(relayAddress string, skipTls bool) (*quic.Conn, error) {
 		RootCAs:            caCertPool,
 		NextProtos:         []string{agentProtocol},
 		InsecureSkipVerify: skipTls,
+		MinVersion:         tls.VersionTLS13,
 	}
 	quicConfig := &quic.Config{
 		HandshakeIdleTimeout: 10 * time.Second,
