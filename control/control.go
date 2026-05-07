@@ -25,7 +25,7 @@ import (
 )
 
 // we need some kind of state machine where we
-// 1) say hello to the relay, state who we are and what services we have
+// 1) say hello to the relay, state who we are
 // 2) block until we receive an OK from the relay
 // 3) wait for relay to send connect requests
 // 4) Probably crash obviously if the stream is closed unexpectedly

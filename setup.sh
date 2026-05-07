@@ -67,7 +67,9 @@ if [ ${#missing_pkgs[@]} -gt 0 ]; then
 fi
 
 # Add GPG key
-curl -fsSL https://pkg.hardpoint.dev/apt/hardpoint.gpg | $SUDO gpg --dearmor -o /usr/share/keyrings/hardpoint-archive-keyring.gpg
+if [ ! -f /usr/share/keyrings/hardpoint-archive-keyring.gpg ]; then
+	curl -fsSL https://pkg.hardpoint.dev/apt/hardpoint.gpg | $SUDO gpg --dearmor -o /usr/share/keyrings/hardpoint-archive-keyring.gpg
+fi
 
 # Add repository
 echo "deb [signed-by=/usr/share/keyrings/hardpoint-archive-keyring.gpg] https://pkg.hardpoint.dev/apt/ stable main" | $SUDO tee /etc/apt/sources.list.d/hardpoint.list
