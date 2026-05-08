@@ -85,6 +85,24 @@ func parseArgs() *ParseResult {
 	return &ParseResult{Args: args, parser: p}
 }
 
+// get the key directory we should fall back to depending on platform
+// if we're on MacOS and the directory doesn't exist, try to create it
+func defaultKeyDir() (string, error) {
+	if runtime.GOOS == "darwin" {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			keyDir := filepath.Join(homeDir, ".config", "hardpointd")
+			if err := os.MkdirAll(keyDir, 0755); err != nil {
+				return "", fmt.Errorf("failed to create key directory: %w", err)
+			}
+			return keyDir, nil
+		}
+		return "", err
+	} else {
+		return "/var/lib/hardpointd", nil
+	}
+}
+
 func ParseArgsAndLayerDefaults() (*ParseResult, error) {
 	result := parseArgs()
 	parsed := result.Args
@@ -101,27 +119,14 @@ func ParseArgsAndLayerDefaults() (*ParseResult, error) {
 		if common.IsContainer() {
 			log.Printf("Running in a container, storing keys in memory instead of the file system")
 		} else {
-			homeDir, err := os.UserHomeDir()
-			if err == nil {
-				configDir := filepath.Join(homeDir, ".config", "hardpointd")
-				if _, err := os.Stat(configDir); err == nil {
-					parsed.KeyDir = configDir
-				} else if runtime.GOOS == "darwin" {
-					if err := os.MkdirAll(configDir, 0755); err != nil {
-						return nil, fmt.Errorf("failed to create key directory: %w", err)
-					}
-					parsed.KeyDir = configDir
-				}
+			keyDir, err := defaultKeyDir()
+			if err != nil {
+				return nil, fmt.Errorf("key directory not found")
 			}
-			if parsed.KeyDir == "" {
-				if _, err := os.Stat("/var/lib/hardpointd"); err == nil {
-					parsed.KeyDir = "/var/lib/hardpointd"
-				} else {
-					return nil, fmt.Errorf("key directory not found")
-				}
-			}
+			parsed.KeyDir = keyDir
 		}
 	}
+	log.Printf("Using %s as key directory\n", parsed.KeyDir)
 
 	if parsed.ConnectCmd != nil {
 		if parsed.ConnectCmd.OrgId == "" {

@@ -10,7 +10,7 @@ User=hardpoint
 Group=hardpoint
 ExecStart=/usr/bin/hardpointd connect
 Restart=on-failure
-RestartSec=5s
+RestartSec=60s
 
 # Security hardening
 NoNewPrivileges=true
