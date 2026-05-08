@@ -1,3 +1,11 @@
+## [1.1.30](https://github.com/hardpointlabs/agent/compare/v1.1.29...v1.1.30) (2026-05-08)
+
+
+### Bug Fixes
+
+* set platform-specific key directories, increase systemd restart sleep ([f0eb303](https://github.com/hardpointlabs/agent/commit/f0eb3037b6facfc3f1b28ade6e17cd62c207dcfb))
+* upload-artifact v7 ([f7ead1d](https://github.com/hardpointlabs/agent/commit/f7ead1d81404179402e7a31dfd4aaf8718154bac))
+
 ## [1.1.29](https://github.com/hardpointlabs/agent/compare/v1.1.28...v1.1.29) (2026-04-17)
 
 
