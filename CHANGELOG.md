@@ -1,3 +1,10 @@
+## [1.1.31](https://github.com/hardpointlabs/agent/compare/v1.1.30...v1.1.31) (2026-05-08)
+
+
+### Bug Fixes
+
+* path bug in key loader ([58c395b](https://github.com/hardpointlabs/agent/commit/58c395beb6b43ced13135509a5e1272e8dd843e0))
+
 ## [1.1.30](https://github.com/hardpointlabs/agent/compare/v1.1.29...v1.1.30) (2026-05-08)
 
 
