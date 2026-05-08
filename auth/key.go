@@ -62,7 +62,7 @@ func LoadOrCreateKeyPair(path string) (*KeyPair, error) {
 
 	kp := &KeyPair{private: priv, Public: pub}
 
-	fingerprintFile := filepath.Join(path, "/fingerprint")
+	fingerprintFile := filepath.Join(path, "fingerprint")
 	if err := os.WriteFile(fingerprintFile, kp.Fingerprint(), 0644); err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func (k *KeyPair) Fingerprint() []byte {
 }
 
 func ReadFingerprintFromFile(keyDir string) {
-	fingerprint, err := os.ReadFile(filepath.Join(keyDir, "/fingerprint"))
+	fingerprint, err := os.ReadFile(filepath.Join(keyDir, "fingerprint"))
 	if err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
 		os.Exit(1)

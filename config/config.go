@@ -105,7 +105,7 @@ func defaultKeyDir() (string, error) {
 
 func ParseArgsAndLayerDefaults() (*ParseResult, error) {
 	result := parseArgs()
-	parsed := result.Args
+	parsed := &result.Args
 
 	if parsed.InitCmd == nil && parsed.ConnectCmd == nil && parsed.FingerprintCmd == nil {
 		return result, nil
