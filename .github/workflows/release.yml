@@ -64,7 +64,7 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       - name: Upload .deb artifacts
         if: steps.semantic.outputs.new_release == 'true'
-        uses: actions/upload-artifact@v8
+        uses: actions/upload-artifact@v7
         with:
           name: deb-packages
           path: dist/*.deb
