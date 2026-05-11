@@ -90,7 +90,7 @@ func parseArgs() *ParseResult {
 func defaultKeyDir() (string, error) {
 	if runtime.GOOS == "darwin" {
 		homeDir, err := os.UserHomeDir()
-		if err != nil {
+		if err == nil {
 			keyDir := filepath.Join(homeDir, ".config", "hardpointd")
 			if err := os.MkdirAll(keyDir, 0755); err != nil {
 				return "", fmt.Errorf("failed to create key directory: %w", err)
