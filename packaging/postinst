@@ -32,6 +32,10 @@ EOF
         chown hardpoint:hardpoint /etc/hardpointd/config.yaml
         chown hardpoint:hardpoint /var/lib/hardpointd
 
+        if command -v sysctl >/dev/null 2>&1; then
+            sysctl -p /etc/sysctl.d/99-mydaemon-quic.conf >/dev/null 2>&1 || true
+        fi
+
         # Reload systemd daemon
         systemctl daemon-reload
         

@@ -41,6 +41,8 @@ nfpms:
     priority: optional
     bindir: /usr/bin
     contents:
+      - src: packaging/99-hardpointd.conf
+        dst: /etc/sysctl.d/99-hardpointd.conf
       - src: packaging/debconf-templates
         dst: /usr/share/debconf/templates/hardpointd
         file_info:

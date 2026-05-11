@@ -11,6 +11,9 @@ Group=hardpoint
 ExecStart=/usr/bin/hardpointd connect
 Restart=on-failure
 RestartSec=60s
+NoNewPrivileges=true
+CapabilityBoundingSet=
+AmbientCapabilities=
 
 # Security hardening
 NoNewPrivileges=true
