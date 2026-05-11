@@ -1,3 +1,11 @@
+## [1.1.32](https://github.com/hardpointlabs/agent/compare/v1.1.31...v1.1.32) (2026-05-11)
+
+
+### Bug Fixes
+
+* control flow typo ([d630614](https://github.com/hardpointlabs/agent/commit/d630614d0d0355d2607b8ee57b419d0f82cc200f))
+* set receive buffer size, constrain systemd unit ([3241f1d](https://github.com/hardpointlabs/agent/commit/3241f1de6946f6f77b2f3924c3abb524ea1ff846))
+
 ## [1.1.31](https://github.com/hardpointlabs/agent/compare/v1.1.30...v1.1.31) (2026-05-08)
 
 
