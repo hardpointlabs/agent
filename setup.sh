@@ -72,7 +72,7 @@ if [ ! -f /usr/share/keyrings/hardpoint-archive-keyring.gpg ]; then
 fi
 
 # Add repository
-echo "deb [signed-by=/usr/share/keyrings/hardpoint-archive-keyring.gpg] https://pkg.hardpoint.dev/apt/ stable main" | $SUDO tee /etc/apt/sources.list.d/hardpoint.list
+echo "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/hardpoint-archive-keyring.gpg] https://pkg.hardpoint.dev/apt/ stable main" | $SUDO tee /etc/apt/sources.list.d/hardpoint.list
 
 # Update apt
 $SUDO apt-get update
