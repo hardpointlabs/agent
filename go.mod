@@ -5,7 +5,7 @@ go 1.26.1
 require (
 	github.com/alexflint/go-arg v1.6.1
 	github.com/hardpointlabs/lpstream v1.1.1
-	github.com/quic-go/quic-go v0.59.0
+	github.com/quic-go/quic-go v0.59.1
 	golang.org/x/crypto v0.50.0
 	golang.org/x/sync v0.20.0
 	gopkg.in/yaml.v3 v3.0.1
