@@ -36,7 +36,7 @@ flowchart LR
     C -- TCP --> D
 ```
 
-Connections from SDK -> Relay and Agent -> Relay mandate TLS 1.3. TLS hardens the connection against MITM interception from the open internet, although since the Relay is not a trusted component in our threat model, we use an additional ML-KEM. Given Hardpoint's current emphasis on the DevEx for TypeScript/JS-based applications running in ephemeral environments such as a Vercel function or a Fly.io machine, the SDK -> Relay communication is implemented as a HTTP CONNECT proxy.
+Connections from SDK -> Relay and Agent -> Relay mandate TLS 1.3. TLS hardens the connection against MITM interception from the open internet, although since the Relay is not a trusted component in our threat model, we use an additional ML-KEM layer on top, once a stream is established between SDK and Agent. Given Hardpoint's current emphasis on the DevEx for TypeScript/JS-based applications running in ephemeral environments such as a Vercel function or a Fly.io machine, the SDK -> Relay communication is implemented as a HTTP CONNECT proxy.
 
 ### Versioning
 
