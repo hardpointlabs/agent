@@ -40,7 +40,7 @@ flowchart LR
 
 Connections from SDK -> Relay and Agent -> Relay mandate TLS 1.3. TLS hardens the connection against MITM interception from the open internet, although since the Relay is not a trusted component in our threat model, we use an additional ML-KEM layer on top, once a stream is established between SDK and Agent. Therefore the trust boundary is between SDK and Agent, both of which have their source code available to review.
 
-Given Hardpoint's current emphasis on the DevEx for TypeScript/JS-based applications running in ephemeral environments such as a Vercel function or a Fly.io machine, the SDK -> Relay communication is implemented as a HTTP CONNECT proxy, which affords a level of simplicity and allows ingress hardening with common off-the-shelf tooling. However, as QUIC implementations in server-side JS runtimes improve, the goal is to build end-to-end QUIC support over time. For this reason we've elected not to lean on end-to-end tunneling capabilities of transport protocols like TLS+
+Given Hardpoint's current emphasis on the DevEx for TypeScript/JS-based applications running in ephemeral environments such as a Vercel function or a Fly.io machine, the SDK -> Relay communication is implemented as a HTTP CONNECT proxy, which affords a level of simplicity and allows ingress hardening with common off-the-shelf tooling. However, as QUIC implementations in server-side JS runtimes improve, the goal is to build end-to-end QUIC support over time. For this reason we've elected not to lean on end-to-end tunneling capabilities of transport protocols like TLS+ClientHello extensions.
 
 ### Versioning
 
