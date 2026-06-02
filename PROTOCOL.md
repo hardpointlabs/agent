@@ -13,9 +13,9 @@ The protocol is a simple, framed, text-based state machine sitting on top of [QU
 
 ## Terminology
 
-* SDK: The initiator of a tunneling request. Presents an identity (e.g. OIDC token) and a named service and exposes a stream for upstream client libraries such as database drivers to transparently communicate with the remote service across an established tunnel
-* Agent/`hardpointd`: used interchangeably to refer to a daemon running inside a private network which constitutes one end of a Hardpoint Connect Protocol tunnel. It makes an outbound connnection to the Relay but is not publicly reachable
-* Relay: the touchpoint within Hardpoint's managed network mesh which constitutes the receiving end of a Hardpoint Connect Protocol tunnel. Evaluates whether SDKs with a given presented identity are allowed to access services they're requesting, and forwards traffic if they are
+* [SDK](https://github.com/hardpointlabs/sdk): The initiator of a tunneling request. Presents an identity (e.g. OIDC token) and a named service and exposes a stream for upstream client libraries such as database drivers to transparently communicate with the remote service across an established tunnel
+* Relay: the rendezvous point within Hardpoint's managed network mesh. Evaluates whether SDKs with a given presented identity are allowed to access services they're requesting, and forwards traffic if they are
+* Agent/`hardpointd`: used interchangeably to refer to a daemon running inside a private network which constitutes one end of a Hardpoint Connect Protocol tunnel. It makes an outbound connnection to the Relay but is not publicly reachable. It's the receiving end of a Hardpoint Connect Protocol tunnel. The source code is contained in this repo
 * Service: TCP-based server running somewhere within the same network as the agent, but not publicly accessible. Agents relay traffic to services when they receive traffic requests from the Hardpoint network
 
 ## Details
@@ -36,7 +36,9 @@ flowchart LR
     C -- TCP --> D
 ```
 
-Connections from SDK -> Relay and Agent -> Relay mandate TLS 1.3. TLS hardens the connection against MITM interception from the open internet, although since the Relay is not a trusted component in our threat model, we use an additional ML-KEM layer on top, once a stream is established between SDK and Agent. Given Hardpoint's current emphasis on the DevEx for TypeScript/JS-based applications running in ephemeral environments such as a Vercel function or a Fly.io machine, the SDK -> Relay communication is implemented as a HTTP CONNECT proxy.
+Connections from SDK -> Relay and Agent -> Relay mandate TLS 1.3. TLS hardens the connection against MITM interception from the open internet, although since the Relay is not a trusted component in our threat model, we use an additional ML-KEM layer on top, once a stream is established between SDK and Agent. Therefore the trust boundary is between SDK and Agent, both of which have their source code available to review.
+
+Given Hardpoint's current emphasis on the DevEx for TypeScript/JS-based applications running in ephemeral environments such as a Vercel function or a Fly.io machine, the SDK -> Relay communication is implemented as a HTTP CONNECT proxy, which affords a level of simplicity and allows ingress hardening with common off-the-shelf tooling. However, as QUIC implementations in server-side JS runtimes improve, the goal is to build end-to-end QUIC support over time.
 
 ### Versioning
 
